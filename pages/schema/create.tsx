@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
@@ -8,7 +7,7 @@ import { SchemaRegistry } from "@ethereum-attestation-service/eas-sdk"
 import { useSigner } from "@/hooks/useSigner";
 import { Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import {
   Form,
   FormControl,

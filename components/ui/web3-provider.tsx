@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 
 import { WagmiProvider, createConfig } from 'wagmi';
@@ -7,6 +8,7 @@ import { chains, WALLETCONNECT_PROJECT_ID } from '@/lib/config';
 
 const config = createConfig(
   getDefaultConfig({
+    ssr: true,
     appName: 'Avalanche Attestation Service',
     walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
     chains

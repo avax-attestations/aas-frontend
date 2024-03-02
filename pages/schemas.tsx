@@ -1,4 +1,3 @@
-"use client";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { truncateEllipsis } from "@/lib/utils";
@@ -14,7 +13,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useDb } from "@/hooks/useDb";
 
 function getPageCount(totalRecords: number, pageSize: number): number {
