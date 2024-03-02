@@ -4,7 +4,16 @@ import { Abi } from 'abitype';
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
 
-export const chains: [ViemChain, ...ViemChain[]] = [avalancheFuji, hardhat]
+
+const devChains: [ViemChain, ...ViemChain[]] = [
+  hardhat
+]
+
+const prodChains: [ViemChain, ...ViemChain[]] = [
+  avalancheFuji
+]
+
+export const chains = process.env.NODE_ENV === 'production' ? prodChains : devChains
 
 export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!;
 
@@ -40,7 +49,7 @@ export const DEPLOYMENT = {
   },
 } as const;
 
-export type Chain = keyof typeof DEPLOYMENT; 
+export type Chain = keyof typeof DEPLOYMENT;
 
 export function isChain(key: any): key is Chain {
   return key in DEPLOYMENT;
