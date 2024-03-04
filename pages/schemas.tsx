@@ -87,7 +87,7 @@ export default function SchemasPage() {
 
   const schemas = useLiveQuery(
     () => db.schemas
-      .orderBy('time')
+      .orderBy('id')
       .reverse()
       .offset((page - 1) * pageSize)
       .limit(pageSize)
@@ -146,13 +146,13 @@ export default function SchemasPage() {
                 {truncateEllipsis(s.uid, 13)}
               </TableCell>
               <TableCell>
-                {s.schema}
+                {s.name ? `(${s.name})` : ''} {s.schema}
               </TableCell>
               <TableCell>
                 {s.resolver}
               </TableCell>
               <TableCell align="center">
-                0
+                {s.attestationCount}
               </TableCell>
             </TableRow>))}
           </TableBody>

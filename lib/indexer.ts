@@ -46,6 +46,7 @@ async function getEventsInBlockRange(
       ...log
     })
     return {
+      log: log,
       decodedEvent,
       transaction,
       block
@@ -132,15 +133,15 @@ export async function index(chain: Chain, db: Database, client: PublicClient, ea
         case 'Attested':
           mutations.push(...(await handleAttestedEvent(event, eas, db, schemaCache)))
           break;
-        // case 'Revoked':
-        //   mutations.push(await handleRevokedEvent(event, eas))
-        //   break;
+        case 'Revoked':
+          mutations.push(...(await handleRevokedEvent(event, eas, db, schemaCache)))
+          break;
         // case 'RevokedOffchain':
-        //   mutations.push(await handleRevokedOffchainEvent(event))
+        //   mutations.push(...(await handleRevokedOffchainEvent(event)))
         //   break;
-        // case 'Timestamped':
-        //   mutations.push(await handleTimestampedEvent(event))
-        //   break;
+        case 'Timestamped':
+          mutations.push(...(await handleTimestampedEvent(event)))
+          break;
         default:
           console.warn(`Unexpected event ${event.decodedEvent.eventName}`)
           break;
@@ -206,7 +207,8 @@ async function handleSchemaRegisteredEvent(event: Event, schemaCache: Record<str
     time: timeStr(event.block.timestamp),
     txid: event.transaction.hash,
     revocable: args.schema.revocable as boolean,
-    name: ''
+    name: '',
+    attestationCount: 0
   }
   schemaCache[schema.uid] = schema
   return [{
@@ -250,6 +252,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
     }
     return schemas[1]
   })()
+  schema.attestationCount++;
 
   let decodedData: any = null
   let decodedDataJson = ''
@@ -266,7 +269,6 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
   }
 
   const timeCreated = Math.round(new Date().valueOf() / 1000)
-  db.schemas.update
 
   const result = [{
     operation: 'put',
@@ -287,32 +289,81 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
       revocable: attestation.revocable,
       decodedDataJson
     }
+  }, {
+    operation: 'modify',
+    table: 'schemas',
+    data: {
+      uid: schema.uid,
+      attestationCount: schema.attestationCount
+    }
   }] as Mutations
 
+
   if (attestation.schema === schemaNameUID) {
-    result.push({
-      operation: 'modify',
-      table: 'schemas',
-      data: {
-        uid: decodedData[0].value.value,
-        name: decodedData[1].value.value
+    const uid = decodedData[0].value.value
+    const name = decodedData[1].value.value
+    const schemaBeingNamed = await (async () => {
+      if (schemaCache[uid]) {
+        // schema being named in the same block batch which is not committed to the db yet.
+        // get from cache
+        return schemaCache[uid]
       }
-    })
+      const schemas = await db.schemas.where('uid').equals(uid).toArray()
+      if (schemas.length !== 1) {
+        throw new Error(`Cannot find schema with uid ${uid}`)
+      }
+      return schemas[1]
+    })()
+
+    if (schemaBeingNamed.creator.toLowerCase() === attestation.attester.toLowerCase()) {
+      result.push({
+        operation: 'modify',
+        table: 'schemas',
+        data: {
+          uid,
+          name
+        }
+      })
+    }
   }
 
   return result
 }
 
-// async function handleRevokedEvent(event: Event, eas: EAS): Promise<Mutation<'attestations'>> {
-//   const args = event.decodedEvent.args as any
-//
-//   const attestation = await eas.getAttestation(args.data)
-// }
+async function handleRevokedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
+  const args = event.decodedEvent.args as any
+
+  const attestation = await eas.getAttestation(args.data)
+
+  const result = [{
+    operation: 'modify',
+    table: 'attestations',
+    data: {
+      uid: attestation.uid,
+      revoked: true,
+      revocationTime: timeStr(attestation.revocationTime)
+    }
+  }] as Mutations;
+
+  return result
+}
+
+async function handleTimestampedEvent(event: Event): Promise<Mutations> {
+  const uid = event.log.topics[1]
+  const timestamp = event.log.topics[2] ? BigInt(event.log.topics[2]) : 0n
+
+  return [{
+    operation: 'put',
+    table: 'timestamps',
+    data: {
+      uid: uid ?? '',
+      timestamp: timeStr(timestamp),
+      from: event.transaction.from,
+      txid: event.transaction.hash
+    }
+  }]
+}
 
 // async function handleRevokedOffchainEvent(event: Event) {
 //   console.log('Revoked offchain event', event)
-// }
-
-// async function handleTimestampedEvent(event: Event) {
-//   console.log('Timestamped event', event)
 // }

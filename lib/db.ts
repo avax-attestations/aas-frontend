@@ -16,6 +16,7 @@ export interface Schema {
   txid: string
   revocable: boolean
   name: string
+  attestationCount: number
 }
 
 export interface Attestation {
@@ -36,6 +37,13 @@ export interface Attestation {
   decodedDataJson: string
 }
 
+export interface Timestamp {
+  uid: string
+  timestamp: string
+  from: string
+  txid: string
+}
+
 const DB_VERSION = 2;
 
 class AASDexie extends Dexie {
@@ -43,6 +51,7 @@ class AASDexie extends Dexie {
   properties!: Table<Property>
   schemas!: Table<Schema>
   attestations!: Table<Attestation>
+  timestamps!: Table<Timestamp>
 
   constructor(chain: Chain) {
     super(`aas-${chain}`)
@@ -50,7 +59,8 @@ class AASDexie extends Dexie {
     this.version(DB_VERSION).stores({
       properties: '&key',
       schemas: '++id, &uid, schema, resolver, creator, time, name',
-      attestations: '++id, &uid, schemaId, attester, recipient, time'
+      attestations: '++id, &uid, schemaId, attester, recipient, time',
+      timestamps: '++id, &uid, timestamp, from',
     });
   }
 
