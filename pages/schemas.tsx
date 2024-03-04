@@ -1,72 +1,13 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { truncateEllipsis } from "@/lib/utils";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/router";
 import { useDb } from "@/hooks/useDb";
-
-function getPageCount(totalRecords: number, pageSize: number): number {
-  if (pageSize === 0) {
-    throw new Error("Page size must be greater than 0");
-  }
-
-  return Math.ceil(totalRecords / pageSize);
-}
-
-interface PaginatorProps {
-  totalRecords: number
-  pageSize: number
-  page: number
-}
-
-function Paginator({ totalRecords, pageSize, page }: PaginatorProps) {
-  const pageCount = Math.max(getPageCount(totalRecords ?? 0, pageSize), 1)
-  const canGoPrev = page > 1;
-  const canGoNext = page < pageCount;
-
-  return (
-    <Pagination>
-      <PaginationContent>
-        <PaginationItem>
-          <Link legacyBehavior passHref
-            className={!canGoPrev ? 'pointer-events-none' : ''}
-            tabIndex={!canGoPrev ? -1 : undefined}
-            aria-disabled={!canGoPrev}
-            href={canGoPrev ? ('?' + new URLSearchParams({
-              page: Math.max(page - 1, 1).toString()
-            }).toString()) : '#'}>
-            <PaginationPrevious />
-          </Link>
-        </PaginationItem>
-        <PaginationItem>
-          Page {page} of {pageCount}
-        </PaginationItem>
-        <PaginationItem>
-          <Link legacyBehavior passHref
-            className={!canGoNext ? 'pointer-events-none' : ''}
-            tabIndex={!canGoNext ? -1 : undefined}
-            aria-disabled={!canGoNext}
-            href={canGoNext ? ('?' + new URLSearchParams({
-              page: Math.min(page + 1, pageCount).toString()
-            }).toString()) : '#'}>
-            <PaginationNext />
-          </Link>
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
-  )
-}
+import { Paginator } from "@/components/ui/paginator";
 
 export default function SchemasPage() {
   const searchParams = useSearchParams();

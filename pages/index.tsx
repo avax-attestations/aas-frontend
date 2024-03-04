@@ -5,7 +5,7 @@ export default function HomeNextPage() {
   const { push } = useRouter()
 
   useEffect(() => {
-    push('/schemas');
+    push('/attestations');
   }, [push])
 
   return (

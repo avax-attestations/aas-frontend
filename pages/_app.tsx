@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { Web3Provider } from '../components/ui/web3-provider';
+import { Web3Provider } from "@/providers/web3-provider";
 import { NextPage } from "next";
 import React, { FC, ReactNode } from "react";
 import Link from "next/link";
