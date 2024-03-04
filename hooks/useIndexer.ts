@@ -3,18 +3,28 @@ import { usePublicClient } from "wagmi";
 import { index } from "@/lib/indexer";
 import { useChain } from "./useChain";
 import { useDb } from "./useDb";
+import { EAS, type TransactionSigner } from "@ethereum-attestation-service/eas-sdk"
+import { useAddresses } from "./useAddresses";
+import { useProvider } from "./useProvider";
 
+
+const POLL_INTERVAL = 20000;
 
 export function useIndexer() {
   const client = usePublicClient();
   const chain = useChain();
   const db = useDb();
+  const { easAddress } = useAddresses();
+  const provider = useProvider();
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !client || !db) {
+    if (typeof window === 'undefined' || !client || !db || !provider) {
       return;
     }
 
+    const eas = new EAS(easAddress)
+    // This cast to TransactionSigner should be safe if we only want to do read operations.
+    eas.connect(provider as unknown as TransactionSigner)
     console.log('Indexing chain', chain)
 
     let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -27,8 +37,8 @@ export function useIndexer() {
         return;
       }
 
-      index(chain, db, client).then(() => {
-        timeout = setTimeout(run, 1000)
+      index(chain, db, client, eas).then(() => {
+        timeout = setTimeout(run, POLL_INTERVAL)
       })
     }
 
@@ -40,6 +50,6 @@ export function useIndexer() {
         clearTimeout(timeout);
       }
     }
-  }, [chain, db, client]);
+  }, [chain, db, client, easAddress, provider]);
 
 }
