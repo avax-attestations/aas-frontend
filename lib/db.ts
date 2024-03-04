@@ -6,7 +6,7 @@ interface Property {
   value: string
 }
 
-interface Schema {
+export interface Schema {
   id?: number
   uid: string
   schema: string
@@ -15,21 +15,83 @@ interface Schema {
   time: string
   txid: string
   revocable: boolean
+  name: string
 }
 
+export interface Attestation {
+  id?: number
+  uid: string
+  schemaId: string
+  data: string
+  attester: string
+  recipient: string
+  refUID: string
+  revocationTime: string
+  expirationTime: string
+  time: string
+  txid: string
+  revoked: boolean
+  timeCreated: number
+  revocable: boolean
+  decodedDataJson: string
+}
+
+const DB_VERSION = 2;
+
 class AASDexie extends Dexie {
+
   properties!: Table<Property>
   schemas!: Table<Schema>
+  attestations!: Table<Attestation>
 
   constructor(chain: Chain) {
     super(`aas-${chain}`)
 
-    this.version(1).stores({
+    this.version(DB_VERSION).stores({
       properties: '&key',
-      schemas: '++id, &uid, schema, resolver, creator, time',
+      schemas: '++id, &uid, schema, resolver, creator, time, name',
+      attestations: '++id, &uid, schemaId, attester, recipient, time'
     });
   }
+
+  public open() {
+    if (this.isOpen()) return super.open();
+
+    return Dexie.Promise.resolve()
+      .then(() => Dexie.exists(this.name))
+      .then((exists) => {
+        if (!exists) {
+          // no need to check database version since it doesn't exist
+          return;
+        }
+
+        // Open separate instance of dexie to get current database version
+        return new Dexie(this.name).open()
+          .then(async db => {
+            if (db.verno >= DB_VERSION) {
+              // database up to date (or newer)
+              return db.close();
+            }
+
+            console.log(`Database schema out of date, resetting all data. (currentVersion: ${db.verno}, expectedVersion: ${DB_VERSION})`);
+            await db.delete();
+
+            // ensure the delete was successful
+            const exists = await Dexie.exists(this.name);
+            if (exists) {
+              throw new Error('Failed to remove mock backend database.');
+            }
+          })
+      })
+      .then(() => super.open());
+  }
 }
+
+export type TableName = Exclude<{
+  [K in keyof Database]: Database[K] extends Table<any> ? K : never
+}[keyof Database], 'properties'>;
+
+export type EntityFromTableName<T extends TableName> = Database[T] extends Table<infer U> ? U : never;
 
 export type Database = AASDexie;
 const dbCache = new Map<Chain, AASDexie>();
