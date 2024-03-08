@@ -77,3 +77,8 @@ export const TYPES = [
   'uint248',
   'uint256',
 ] as const;
+
+
+export const FIELD_REGEX = new RegExp(`^\\s*(${TYPES.join('|')})\\s*(\\[\\])?\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*$`);
+
+export type FieldType = typeof TYPES[number];

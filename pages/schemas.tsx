@@ -76,6 +76,8 @@ export default function SchemasPage() {
               <TableHead>
                 Attestations
               </TableHead>
+              <TableHead>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,10 +92,18 @@ export default function SchemasPage() {
                 {s.name ? `(${s.name})` : ''} {s.schema}
               </TableCell>
               <TableCell>
-                {s.resolver}
+                {truncateEllipsis(s.resolver, 20)}
               </TableCell>
               <TableCell align="center">
                 {s.attestationCount}
+              </TableCell>
+              <TableCell align="center" >
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/attest-with-schema/${s.uid}`)}
+                  title="Attest with schema">
+                  <PlusCircle className="" />
+                </Button>
               </TableCell>
             </TableRow>))}
           </TableBody>

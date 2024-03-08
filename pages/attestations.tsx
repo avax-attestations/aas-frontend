@@ -22,7 +22,7 @@ export default function AttestationsPage() {
     return p;
   })()
 
-  const pageSize = 10;
+  const pageSize = 20;
 
   const totalRecords = useLiveQuery(() => db.attestations.count(), [db])
 
@@ -65,11 +65,6 @@ export default function AttestationsPage() {
             Search
           </Button>
         </form>
-
-        <Button onClick={() => router.push("/attestation/create")}>
-          <PlusCircle className="w-4 h-4 mr-2" />
-          Make attestation
-        </Button>
       </div>
 
       <Paginator pageSize={pageSize} totalRecords={totalRecords ?? 0} page={page} />
