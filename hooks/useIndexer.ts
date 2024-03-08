@@ -8,7 +8,7 @@ import { useAddresses } from "./useAddresses";
 import { useProvider } from "./useProvider";
 
 
-const POLL_INTERVAL = 20000;
+const POLL_INTERVAL = 1000;
 
 export function useIndexer() {
   const client = usePublicClient();

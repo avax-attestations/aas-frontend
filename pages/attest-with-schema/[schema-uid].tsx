@@ -152,7 +152,15 @@ function BuildFormSchema(schema: ParsedSchema | null) {
       case 'uint256': {
         // get the number of bits from the type
         const bits = parseInt(field.type.slice(4));
-        fields[field.name] = z.coerce.bigint().min(0n).max((1n << BigInt(bits)) - 1n)
+        fields[field.name] = z.string().transform(v => {
+          try {
+            return BigInt(v);
+          } catch (e) {
+            return -1n;
+          }
+        }).pipe(z.bigint({
+          coerce: true,
+        }).nonnegative().max((1n << BigInt(bits)) - 1n))
         break;
       }
     }
@@ -191,6 +199,8 @@ export default function AttestWithSchemaPage() {
   const { setValue, getValues } = form;
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log('form data', data);
+
     if (!signer) {
       toast({
         variant: 'destructive',
