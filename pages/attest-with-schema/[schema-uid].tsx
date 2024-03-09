@@ -15,12 +15,13 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { ControllerProps, useForm, UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
 import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
+import { PlusCircle, Trash } from "lucide-react";
 
 
 type ParsedSchemaField = {
@@ -50,27 +51,134 @@ function parseSchema(schema: string): ParsedSchema | null {
   return { fields };
 }
 
+type FormFieldRenderer = ControllerProps<any, any>['render'];
 
-function FormFieldFromSchema({ fieldSchema }: { fieldSchema: ParsedSchemaField }) {
-  return (<FormField
-    name={`fields.${fieldSchema.name}`}
-    render={({ field }) => (
-      <>
+type NestedFieldProps = {
+  fieldSchema: ParsedSchemaField
+  form: UseFormReturn<any, any, any>
+}
+
+type NestedFormProps = {
+  schema: ParsedSchema
+  form: UseFormReturn<any, any, any>
+}
+
+function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): FormFieldRenderer {
+  const { setValue, getValues } = form;
+  if (fieldSchema.isArray) {
+    const FieldInput: FormFieldRenderer = ({ field }) => {
+      const items = (field.value || []) as any[];
+
+      function deleteField(index: number) {
+        const items = getValues(field.name)
+        setValue(field.name, items.filter((_: any, i: number) => i !== index));
+      }
+
+      function addField() {
+        const items = getValues(field.name) ?? []
+        setValue(field.name,
+          [...items, getFieldDefaultValue({ ...fieldSchema, isArray: false })]);
+      }
+
+      return (
         <FormItem>
-          <FormLabel>{fieldSchema.name.toUpperCase()} | {fieldSchema.type}</FormLabel>
-          <Input {...field} />
-          <FormMessage />
+          <div className="space-y-0.5">
+            <FormLabel className="text-base">
+              {fieldSchema.name.toUpperCase()} | {fieldSchema.type}[]
+            </FormLabel>
+          </div>
+          {items.map((_, i) => {
+            const id = `${field.name}.${i}`;
+            return (
+              <div key={id} className="grid grid-cols-12 items-center gap-4">
+                <div className="col-span-1">
+                </div>
+                <FormField
+                  name={id}
+                  render={({ field }) => (
+                    <FormItem className="col-span-10">
+                      {fieldSchema.type === 'bool' ? (<>
+                        <Switch checked={!!field.value}
+                          onClick={_ => {
+                            return field.onChange(!field.value)
+                          }} />
+                      </>) : (<>
+                        <Input {...field} value={getValues(field.name)} placeholder={`${field.name.slice(7)}`} />
+                        <FormMessage />
+                      </>)}
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  onClick={() => deleteField(i)}
+                  variant="secondary"
+                  className="col-span-1">
+                  <Trash />
+                </Button>
+              </div>
+            )
+          })}
+
+          <div className="grid grid-cols-12 items-center gap-4">
+            <div className="col-span-1">
+            </div>
+            <Button
+              className="col-span-11"
+              type="button"
+              variant="secondary"
+              onClick={addField}
+              title="Add field">
+              <PlusCircle />
+            </Button>
+          </div>
         </FormItem>
-      </>
-    )}
+      )
+    }
+    return FieldInput
+  }
+
+  if (fieldSchema.type === 'bool') {
+    const FieldInput: FormFieldRenderer = ({ field }) => (
+      <FormItem>
+        <div className="space-y-0.5">
+          <FormLabel className="text-base">
+            {fieldSchema.name.toUpperCase()} | {fieldSchema.type}
+          </FormLabel>
+        </div>
+        <FormControl>
+          <Switch checked={!!field.value}
+            onClick={_ => {
+              return field.onChange(!field.value)
+            }} />
+        </FormControl>
+      </FormItem>
+    )
+    return FieldInput
+  }
+
+  const FieldInput: FormFieldRenderer = ({ field }) => (
+    <FormItem>
+      <FormLabel>{fieldSchema.name.toUpperCase()} | {fieldSchema.type}</FormLabel>
+      <Input {...field} />
+      <FormMessage />
+    </FormItem>
+  )
+  return FieldInput
+}
+
+function FormFieldFromSchema(props: NestedFieldProps) {
+  return (<FormField
+    name={`fields.${props.fieldSchema.name}`}
+    render={FormFieldInputFromSchema(props)}
   />
   );
 }
 
-function FormFieldsFromSchema({ schema }: { schema: ParsedSchema }) {
+function FormFieldsFromSchema(props: NestedFormProps) {
   return (<>{
-    schema.fields.map((field, i) => (
-      <FormFieldFromSchema key={i} fieldSchema={field} />
+    props.schema.fields.map((field, i) => (
+      <FormFieldFromSchema key={i} fieldSchema={field} form={props.form} />
     ))}</>)
 }
 
@@ -106,11 +214,11 @@ function BuildFormSchema(schema: ParsedSchema | null) {
         fields[field.name] = z.string()
         break;
       case 'bool':
-        fields[field.name] = z.string()
+        fields[field.name] = z.boolean().default(false)
         break;
       case 'bytes':
       case 'bytes32': {
-        const bytes32Regex = /^[a-f0-9]{1,64}$/i
+        const bytes32Regex = /^[a-f0-9]{64}$/i
         const bytesRegex = /^[a-f0-9]+$/i
         fields[field.name] = z.string().regex(
           field.type == 'bytes32' ? bytes32Regex : bytesRegex, {
@@ -118,41 +226,10 @@ function BuildFormSchema(schema: ParsedSchema | null) {
         })
         break;
       }
-      case 'uint8':
-      case 'uint16':
-      case 'uint24':
-      case 'uint32':
-      case 'uint40':
-      case 'uint48':
-      case 'uint56':
-      case 'uint64':
-      case 'uint72':
-      case 'uint80':
-      case 'uint88':
-      case 'uint96':
-      case 'uint104':
-      case 'uint112':
-      case 'uint120':
-      case 'uint128':
-      case 'uint136':
-      case 'uint144':
-      case 'uint152':
-      case 'uint160':
-      case 'uint168':
-      case 'uint176':
-      case 'uint184':
-      case 'uint192':
-      case 'uint200':
-      case 'uint208':
-      case 'uint216':
-      case 'uint224':
-      case 'uint232':
-      case 'uint240':
-      case 'uint248':
-      case 'uint256': {
+      default: {
         // get the number of bits from the type
         const bits = parseInt(field.type.slice(4));
-        fields[field.name] = z.string().transform(v => {
+        fields[field.name] = z.union([z.string(), z.bigint()]).transform(v => {
           try {
             return BigInt(v);
           } catch (e) {
@@ -164,12 +241,49 @@ function BuildFormSchema(schema: ParsedSchema | null) {
         break;
       }
     }
+
+    if (field.isArray) {
+      fields[field.name] = z.array(fields[field.name]).default([]);
+    }
   }
 
   return z.object({
     ...BaseSchema,
     fields: z.object(fields),
   });
+}
+
+
+function getFieldDefaultValue(field: ParsedSchemaField) {
+  if (field.isArray) {
+    return [];
+  } else {
+    switch (field.type) {
+      case 'bool':
+        return false;
+      case 'address':
+      case 'string':
+      case 'bytes':
+      case 'bytes32':
+        return '';
+      default:
+        return undefined;
+    }
+  }
+}
+
+function getFieldsDefaultValues(schema: ParsedSchema | null): Record<string, any> {
+  if (!schema) {
+    return {};
+  }
+
+  const fields = {} as Record<string, any>;
+
+  for (const field of schema.fields) {
+    fields[field.name] = getFieldDefaultValue(field);
+  }
+
+  return fields;
 }
 
 export default function AttestWithSchemaPage() {
@@ -192,7 +306,8 @@ export default function AttestWithSchemaPage() {
     defaultValues: {
       recipient: '',
       referencedAttestation: '',
-      revocable: true
+      revocable: true,
+      fields: getFieldsDefaultValues(parsedSchema)
     }
   });
 
@@ -217,7 +332,7 @@ export default function AttestWithSchemaPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
           {parsedSchema && parsedSchema.fields.length > 0 && (
-            <FormFieldsFromSchema schema={parsedSchema} />
+            <FormFieldsFromSchema schema={parsedSchema} form={form} />
           )}
           <FormField
             control={form.control}
