@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -45,3 +46,4 @@ export function timeAgo(timestamp: string): string {
     return pluralize('day', diffDays);
   }
 }
+
