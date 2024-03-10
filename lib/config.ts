@@ -13,6 +13,8 @@ const prodChains: [ViemChain, ...ViemChain[]] = [
   avalancheFuji
 ]
 
+export const NAME_SCHEMA_UID = '0x44d562ac1d7cd77e232978687fea027ace48f719cf1d58c7888e509663bb87fc'
+
 export const chains = process.env.NODE_ENV === 'production' ? prodChains : devChains
 
 export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!;

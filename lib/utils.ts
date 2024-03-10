@@ -33,6 +33,9 @@ export function timeAgo(timestamp: string): string {
 
   function pluralize(unit: string, value: number): string {
     value = Math.max(value, 0)
+    if (value === 0) {
+      return 'now';
+    }
     return `${value} ${unit}${value > 1 ? 's' : ''} ago`;
   }
 
