@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { useSigner } from "@/hooks/useSigner";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/router";
+import { type NextRouter, useRouter } from "next/router";
 import {
   Form,
   FormControl,
@@ -148,7 +148,7 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
           </FormLabel>
         </div>
         <FormControl>
-          <Switch checked={!!field.value}
+          <Switch checked={getValues(field.name)}
             onClick={_ => {
               return field.onChange(!field.value)
             }} />
@@ -158,13 +158,16 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
     return FieldInput
   }
 
-  const FieldInput: FormFieldRenderer = ({ field }) => (
-    <FormItem>
-      <FormLabel>{fieldSchema.name.toUpperCase()} | {fieldSchema.type}</FormLabel>
-      <Input {...field} />
-      <FormMessage />
-    </FormItem>
-  )
+  const FieldInput: FormFieldRenderer = ({ field }) => {
+    const value = getValues(field.name)
+    return (
+      <FormItem>
+        <FormLabel>{fieldSchema.name.toUpperCase()} | {fieldSchema.type}</FormLabel>
+        <Input {...field} value={value} />
+        <FormMessage />
+      </FormItem>
+    )
+  }
   return FieldInput
 }
 
@@ -273,18 +276,28 @@ function getFieldDefaultValue(field: ParsedSchemaField) {
   }
 }
 
-function getFieldsDefaultValues(schema: ParsedSchema | null): Record<string, any> {
-  if (!schema) {
-    return {};
+function getFieldsDefaultValues(schema: ParsedSchema | null, router: NextRouter): Record<string, any> {
+  const defaults = {} as Record<string, any>;
+
+  for (const [key, value] of Object.entries(router.query)) {
+    if (key.startsWith('def-')) {
+      const fieldName = key.slice(4);
+      defaults[fieldName] = value;
+    }
   }
 
-  const fields = {} as Record<string, any>;
+  if (!schema) {
+    return defaults;
+  }
 
   for (const field of schema.fields) {
-    fields[field.name] = getFieldDefaultValue(field);
+    const key = field.name
+    if (!Object.hasOwn(defaults, key)) {
+      defaults[key] = getFieldDefaultValue(field)
+    }
   }
 
-  return fields;
+  return defaults;
 }
 
 export default function AttestWithSchemaPage() {
@@ -299,17 +312,21 @@ export default function AttestWithSchemaPage() {
     () => db.schemas.where('uid').equals(schemaUid ?? '').first(),
     [db, schemaUid]);
 
-  const parsedSchema = schema ? parseSchema(schema.schema) : null;
+  // const parsedSchema = schema ? parseSchema(schema.schema) : null;
+  const parsedSchema = parseSchema('bytes32 schemaId,string name');
   const FormSchema = BuildFormSchema(parsedSchema);
+
+  const defaultValues = {
+    recipient: '',
+    referencedAttestation: '',
+    revocable: true,
+    fields: getFieldsDefaultValues(parsedSchema, router),
+  }
+  console.log(defaultValues.fields)
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      recipient: '',
-      referencedAttestation: '',
-      revocable: true,
-      fields: getFieldsDefaultValues(parsedSchema)
-    }
+    defaultValues: parsedSchema ? defaultValues : undefined
   });
 
   const { setValue, getValues } = form;

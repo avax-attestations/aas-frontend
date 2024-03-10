@@ -11,7 +11,6 @@ import { Paginator } from "@/components/ui/paginator";
 
 export default function AttestationsPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const db = useDb();
 
   const page = (() => {

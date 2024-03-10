@@ -31,6 +31,7 @@ export function timeAgo(timestamp: string): string {
   const diffDays = Math.round(diffHours / 24);
 
   function pluralize(unit: string, value: number): string {
+    value = Math.max(value, 0)
     return `${value} ${unit}${value > 1 ? 's' : ''} ago`;
   }
 
