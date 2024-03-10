@@ -3,27 +3,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { timeAgo, truncateEllipsis } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
-import { PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/router";
 import { useDb } from "@/hooks/useDb";
 import { Paginator } from "@/components/ui/paginator";
+import { usePaginator } from "@/hooks/usePaginator";
 
 export default function AttestationsPage() {
   const searchParams = useSearchParams();
   const db = useDb();
 
-  const page = (() => {
-    const p = parseInt(searchParams.get('page') ?? '1')
-    if (Number.isNaN(p)) {
-      return 1;
-    }
-    return p;
-  })()
-
-  const pageSize = 20;
-
   const totalRecords = useLiveQuery(() => db.attestations.count(), [db])
+
+  const {
+    page,
+    pageCount,
+    pageSize,
+    prevHref,
+    nextHref
+  } = usePaginator({
+    totalRecords: totalRecords ?? 0,
+    pageSize: 20,
+    searchParams
+  })
 
   const attestations = useLiveQuery(
     () => db.attestations
@@ -66,7 +67,7 @@ export default function AttestationsPage() {
         </form>
       </div>
 
-      <Paginator pageSize={pageSize} totalRecords={totalRecords ?? 0} page={page} />
+      <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
       <div className="border rounded">
         <Table>
           <TableHeader>
@@ -95,7 +96,7 @@ export default function AttestationsPage() {
               </TableCell>
               <TableCell>
                 #{a.schemaOrdinal} {a.schemaName ? `(${a.schemaName})` : ''}
-              </TableCell> 
+              </TableCell>
               <TableCell>
                 {truncateEllipsis(a.attester, 15)}
               </TableCell>
@@ -109,7 +110,7 @@ export default function AttestationsPage() {
           </TableBody>
         </Table>
       </div>
-      <Paginator pageSize={pageSize} totalRecords={totalRecords ?? 0} page={page} />
+      <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
     </>
   );
 };
