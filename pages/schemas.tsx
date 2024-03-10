@@ -12,9 +12,10 @@ export default function SchemasPage() {
 
   const totalRecords = useLiveQuery(() => db.schemas.count(), [db])
 
-  const { page, pageSize } = usePaginator({
+  const pageSize = 10;
+  const { page } = usePaginator({
     totalRecords: totalRecords ?? 0,
-    pageSize: 10,
+    pageSize,
     searchParams
   })
 

@@ -37,5 +37,5 @@ export function usePaginator({
     page: Math.min(page + 1, pageCount).toString()
   }).toString()) : '#'
 
-  return { page, pageSize, pageCount, prevHref, nextHref }
+  return { page, pageCount, prevHref, nextHref }
 }
