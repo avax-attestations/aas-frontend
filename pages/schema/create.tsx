@@ -22,6 +22,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { TYPES } from "@/lib/field-types";
 import { useAddresses } from "@/hooks/useAddresses";
+import { useCallback } from "react";
 
 const SchemaFieldSchema = z.object({
   name: z.string().min(2, {
@@ -73,7 +74,7 @@ export default function CreateSchemaPage() {
       getValues().fields.filter((_, i) => i !== index))
   }
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  const onSubmit = useCallback(async (data: z.infer<typeof FormSchema>) => {
     if (!signer) {
       toast({
         variant: 'destructive',
@@ -115,7 +116,7 @@ export default function CreateSchemaPage() {
     } finally {
       t.dismiss()
     }
-  }
+  }, [router, schemaRegistryAddress, signer, toast])
 
   return (
     <>

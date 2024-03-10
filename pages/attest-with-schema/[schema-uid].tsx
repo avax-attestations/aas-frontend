@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { EAS } from "@ethereum-attestation-service/eas-sdk";
+import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { useSigner } from "@/hooks/useSigner";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/router";
@@ -22,6 +22,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
 import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
 import { PlusCircle, Trash } from "lucide-react";
+import { useCallback } from "react";
 
 
 type ParsedSchemaField = {
@@ -188,7 +189,7 @@ function BuildFormSchema(schema: ParsedSchema | null) {
       message: 'Invalid resolver address'
     })]),
     revocable: z.boolean(),
-    expirationTime: z.optional(z.number().int().min(0)),
+    expirationTime: z.optional(z.bigint().min(0n)).default(0n),
     referencedAttestation: z.union([z.string().length(0), z.string().regex(/\s*(0x[a-f0-9]{64})\s*/, {
       message: 'Invalid attestation uid'
     })])
@@ -218,8 +219,8 @@ function BuildFormSchema(schema: ParsedSchema | null) {
         break;
       case 'bytes':
       case 'bytes32': {
-        const bytes32Regex = /^[a-f0-9]{64}$/i
-        const bytesRegex = /^[a-f0-9]+$/i
+        const bytes32Regex = /^0x(?:[a-f0-9]{2}){32}$/i
+        const bytesRegex = /^0x(?:[a-f0-9]{2})+$/i
         fields[field.name] = z.string().regex(
           field.type == 'bytes32' ? bytes32Regex : bytesRegex, {
           message: `Invalid ${field.type} string`
@@ -313,10 +314,8 @@ export default function AttestWithSchemaPage() {
 
   const { setValue, getValues } = form;
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log('form data', data);
-
-    if (!signer) {
+  const onSubmit = useCallback(async (data: z.infer<typeof FormSchema>) => {
+    if (!signer || !schema || !parsedSchema) {
       toast({
         variant: 'destructive',
         description: 'Wallet not connected',
@@ -324,7 +323,55 @@ export default function AttestWithSchemaPage() {
       });
       return;
     }
-  }
+
+    const eas = new EAS(easAddress);
+    eas.connect(signer);
+
+    const schemaEncoder = new SchemaEncoder(schema.schema);
+
+    const toEncode: { name: string, type: string, value: any }[] = [];
+    for (const field of parsedSchema.fields) {
+      toEncode.push({
+        name: field.name,
+        type: field.isArray ? `${field.type}[]` : field.type,
+        value: data.fields[field.name],
+      });
+    }
+
+    debugger
+    const encodedData = schemaEncoder.encodeData(toEncode);
+
+    const t = toast({
+      description: 'Making attestation...',
+      duration: 10000000
+    })
+
+    try {
+      const tx = await eas.attest({
+        schema: schema.uid,
+        data: {
+          recipient: data.recipient || '0x0000000000000000000000000000000000000000',
+          revocable: data.revocable,
+          expirationTime: data.expirationTime,
+          data: encodedData,
+        }
+      });
+
+      await tx.wait(1);
+      router.replace('/attestations');
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error making attestation',
+        description: err.message,
+        duration: 5000,
+      });
+    } finally {
+      t.dismiss();
+    }
+
+
+  }, [easAddress, signer, toast, schema, parsedSchema, router])
 
   return (
     <>

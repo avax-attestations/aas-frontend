@@ -250,7 +250,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
     if (schemas.length !== 1) {
       throw new Error(`Cannot find schema with uid ${attestation.schema}`)
     }
-    return schemas[1]
+    return schemas[0]
   })()
   schema.attestationCount++;
 
@@ -312,7 +312,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
       if (schemas.length !== 1) {
         throw new Error(`Cannot find schema with uid ${uid}`)
       }
-      return schemas[1]
+      return schemas[0]
     })()
 
     if (schemaBeingNamed.creator.toLowerCase() === attestation.attester.toLowerCase()) {
