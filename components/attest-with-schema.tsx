@@ -10,12 +10,18 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ControllerProps, useForm, UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
-import { PlusCircle, Trash } from "lucide-react";
+import { ChevronsUpDown, Minus, Plus, PlusCircle, Trash } from "lucide-react";
 import { ParsedUrlQuery } from "querystring";
+import { useState } from "react";
 
 type ParsedSchemaField = {
   type: FieldType
@@ -62,12 +68,12 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
     const FieldInput: FormFieldRenderer = ({ field }) => {
       const items = (field.value || []) as any[];
 
-      function deleteField(index: number) {
+      function deleteItem(index: number) {
         const items = getValues(field.name)
         setValue(field.name, items.filter((_: any, i: number) => i !== index));
       }
 
-      function addField() {
+      function addItem() {
         const items = getValues(field.name) ?? []
         setValue(field.name,
           [...items, getFieldDefaultValue({ ...fieldSchema, isArray: false })]);
@@ -104,7 +110,7 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
                 />
                 <Button
                   type="button"
-                  onClick={() => deleteField(i)}
+                  onClick={() => deleteItem(i)}
                   variant="secondary"
                   className="col-span-1">
                   <Trash />
@@ -120,8 +126,8 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
               className="col-span-11"
               type="button"
               variant="secondary"
-              onClick={addField}
-              title="Add field">
+              onClick={addItem}
+              title="Add item">
               <PlusCircle />
             </Button>
           </div>
@@ -180,7 +186,7 @@ function FormFieldsFromSchema(props: NestedFormProps) {
 
 function BuildFormSchema(schema: ParsedSchema) {
   const BaseSchema = {
-    recipient: z.union([z.string().length(0), z.string().regex(/\s*(0x[a-f0-9]{40})\s*/, {
+    recipient: z.union([z.string().length(0), z.string().regex(/^\s*(?:0x[a-fA-F0-9]{40}|[a-zA-Z0-9-]+\.eth)\s*$/, {
       message: 'Invalid resolver address'
     })]),
     revocable: z.boolean(),
@@ -295,6 +301,7 @@ export interface AttestWithSchemaProps {
 export function AttestWithSchema({
   schema, routerQuery, onSubmit
 }: AttestWithSchemaProps) {
+  const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false)
   const parsedSchema = parseSchema(schema) ?? { fields: [] };
   const FormSchema = BuildFormSchema(parsedSchema);
 
@@ -319,43 +326,77 @@ export function AttestWithSchema({
       <h1 className="text-3xl font-bold">Attest with schema</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit.bind(null, parsedSchema))} className="w-full space-y-6">
-          {parsedSchema.fields.length > 0 && (
-            <FormFieldsFromSchema schema={parsedSchema} form={form} />
-          )}
           <FormField
             control={form.control}
-            name="referencedAttestation"
+            name="recipient"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Referenced Attestation UID (optional)</FormLabel>
+                <FormLabel>Recipient</FormLabel>
                 <FormControl>
-                  <Input placeholder="ex: 0x0000000000000000000000000000000000000000000000000000000000000000" {...field} />
+                  <Input placeholder="Ex. vitalik.eth or 0x0000000000000000000000000000000000000000" {...field} />
                 </FormControl>
                 <FormDescription>
-                  UID of an attestation you want to reference.
+                  Optional address or ENS name of the recipient.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )} />
-          <FormField
-            control={form.control}
-            name="revocable"
-            render={() => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">
-                    Revocable
-                  </FormLabel>
-                  <FormDescription>
-                    Allow the attestation to be revoked in the future.
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch id="revocable" checked={getValues().revocable}
-                    onClick={_ => setValue('revocable', !getValues().revocable)} />
-                </FormControl>
-              </FormItem>
-            )} />
+          {parsedSchema.fields.length > 0 && (
+            <FormFieldsFromSchema schema={parsedSchema} form={form} />
+          )}
+          <Collapsible
+            open={advancedOptionsOpen}
+            onOpenChange={setAdvancedOptionsOpen}
+          >
+            <CollapsibleTrigger asChild>
+              <div className="grid grid-cols-1">
+                <Button type="button" variant="secondary">
+                  <span className="text-sm font-semibold mx-5">
+                    Advanced options
+                  </span>
+                  {advancedOptionsOpen ?
+                    <Minus className="h-4 w-4" /> :
+                    <Plus className="h-4 w-4" />}
+                </Button>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-2">
+              <FormField
+                control={form.control}
+                name="referencedAttestation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Referenced Attestation UID (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ex: 0x0000000000000000000000000000000000000000000000000000000000000000" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      UID of an attestation you want to reference.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              <FormField
+                control={form.control}
+                name="revocable"
+                render={() => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Revocable
+                      </FormLabel>
+                      <FormDescription>
+                        Allow the attestation to be revoked in the future.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch id="revocable" checked={getValues().revocable}
+                        onClick={_ => setValue('revocable', !getValues().revocable)} />
+                    </FormControl>
+                  </FormItem>
+                )} />
+            </CollapsibleContent>
+          </Collapsible>
           <div className="grid grid-cols-1">
             <Button type="submit" className="col-span-1">Make attestation</Button>
           </div>
