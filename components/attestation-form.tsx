@@ -23,6 +23,7 @@ import { Minus, Plus, PlusCircle, Trash } from "lucide-react";
 import { ParsedUrlQuery } from "querystring";
 import { useState } from "react";
 import { SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
+import { truncateEllipsis } from "@/lib/utils";
 
 type ParsedSchemaField = {
   type: FieldType
@@ -314,6 +315,7 @@ export interface AttestWithSchemaProps {
     referencedAttestation: string,
     revocable: boolean
     revoked: boolean
+    uid: string
   }
 }
 
@@ -365,10 +367,9 @@ export function AttestationForm({
   const title = (() => {
     if (!attestation) {
       return 'Make attestation'
-    } else if (!attestation.revoked) {
-      return 'Revoke attestation'
     } else {
-      return 'Revoked attestation'
+      const uid = truncateEllipsis(attestation.uid, 13);
+      return `Attestation ${uid} ${attestation.revoked ? '(revoked)' : ''}`
     }
   })();
 

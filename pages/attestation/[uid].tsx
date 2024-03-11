@@ -1,4 +1,4 @@
-import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
+import { EAS } from "@ethereum-attestation-service/eas-sdk";
 import { useSigner } from "@/hooks/useSigner";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/router";
@@ -35,6 +35,7 @@ export default function AttestationPage() {
         referencedAttestation: attestation.refUID,
         data: attestation.data,
         revoked: attestation.revoked,
+        uid: attestation.uid,
       }}
       onSubmit={async (parsedSchema) => {
         if (!signer || !schema || !parsedSchema) {
