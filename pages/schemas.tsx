@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useSearchParams } from "next/navigation";
 import { useDb } from "@/hooks/useDb";
 import { useWalletClient } from "wagmi";
-import { Schemas } from "@/components/pages/schemas";
+import { Schemas } from "@/components/schemas";
 import { usePaginator } from "@/hooks/usePaginator";
 
 export default function SchemasPage() {

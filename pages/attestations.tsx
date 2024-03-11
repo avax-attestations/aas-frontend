@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useSearchParams } from "next/navigation";
 import { useDb } from "@/hooks/useDb";
 import { usePaginator } from "@/hooks/usePaginator";
-import { Attestations } from "@/components/pages/attestations";
+import { Attestations } from "@/components/attestations";
 
 export default function AttestationsPage() {
   const searchParams = useSearchParams();

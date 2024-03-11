@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { type ReadonlyURLSearchParams } from "next/navigation";
 import { PlusCircle, SquarePen } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Paginator } from "@/components/ui/paginator";
+import { Paginator } from "@/components/paginator";
 import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
 import { Schema } from "@/lib/db";
 import Link from "next/link";

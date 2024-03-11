@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { timeAgo, truncateEllipsis } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Paginator } from "@/components/ui/paginator";
+import { Paginator } from "@/components/paginator";
 import { usePaginator } from "@/hooks/usePaginator";
 import { ReadonlyURLSearchParams } from "next/navigation";
 

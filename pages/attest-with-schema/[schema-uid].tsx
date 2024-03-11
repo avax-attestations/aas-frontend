@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
-import { AttestWithSchema} from "@/components/pages/attest-with-schema";
+import { AttestWithSchema} from "@/components/attest-with-schema";
 
 export default function AttestWithSchemaPage() {
   const db = useDb();
