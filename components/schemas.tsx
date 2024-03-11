@@ -52,7 +52,7 @@ export function Schemas({
         </form>
 
         <Button asChild>
-          <Link href="/schema/create">
+          <Link href="/schema-create">
             <PlusCircle className="w-4 h-4 mr-2" />
             Create Schema
           </Link>
