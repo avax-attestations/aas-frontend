@@ -333,7 +333,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
 async function handleRevokedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
   const args = event.decodedEvent.args as any
 
-  const attestation = await eas.getAttestation(args.data)
+  const attestation = await eas.getAttestation(args.uid)
 
   const result = [{
     operation: 'modify',

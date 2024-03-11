@@ -19,9 +19,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ControllerProps, useForm, UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
-import { ChevronsUpDown, Minus, Plus, PlusCircle, Trash } from "lucide-react";
+import { Minus, Plus, PlusCircle, Trash } from "lucide-react";
 import { ParsedUrlQuery } from "querystring";
 import { useState } from "react";
+import { SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 
 type ParsedSchemaField = {
   type: FieldType
@@ -55,14 +56,16 @@ type FormFieldRenderer = ControllerProps<any, any>['render'];
 type NestedFieldProps = {
   fieldSchema: ParsedSchemaField
   form: UseFormReturn<any, any, any>
+  ro?: boolean
 }
 
 type NestedFormProps = {
   schema: ParsedSchema
   form: UseFormReturn<any, any, any>
+  ro?: boolean
 }
 
-function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): FormFieldRenderer {
+function FormFieldInputFromSchema({ fieldSchema, form, ro }: NestedFieldProps): FormFieldRenderer {
   const { setValue, getValues } = form;
   if (fieldSchema.isArray) {
     const FieldInput: FormFieldRenderer = ({ field }) => {
@@ -97,24 +100,32 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
                   render={({ field }) => (
                     <FormItem className="col-span-10">
                       {fieldSchema.type === 'bool' ? (<>
-                        <Switch checked={!!field.value}
+                        <Switch
+                          checked={!!field.value}
                           onClick={_ => {
-                            return field.onChange(!field.value)
+                            return ro ? null : field.onChange(!field.value)
                           }} />
                       </>) : (<>
-                        <Input {...field} value={getValues(field.name)} placeholder={`${field.name.slice(7)}`} />
+                        <Input
+                          {...field}
+                          value={getValues(field.name)}
+                          placeholder={`${field.name.slice(7)}`}
+                          readOnly={ro}
+                        />
                         <FormMessage />
                       </>)}
                     </FormItem>
                   )}
                 />
-                <Button
-                  type="button"
-                  onClick={() => deleteItem(i)}
-                  variant="secondary"
-                  className="col-span-1">
-                  <Trash />
-                </Button>
+                {!ro ?
+                  <Button
+                    type="button"
+                    onClick={() => deleteItem(i)}
+                    variant="secondary"
+                    className="col-span-1">
+                    <Trash />
+                  </Button>
+                  : <></>}
               </div>
             )
           })}
@@ -122,14 +133,15 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
           <div className="grid grid-cols-12 items-center gap-4">
             <div className="col-span-1">
             </div>
-            <Button
-              className="col-span-11"
-              type="button"
-              variant="secondary"
-              onClick={addItem}
-              title="Add item">
-              <PlusCircle />
-            </Button>
+            {!ro ?
+              <Button
+                className="col-span-11"
+                type="button"
+                variant="secondary"
+                onClick={addItem}
+                title="Add item">
+                <PlusCircle />
+              </Button> : <></>}
           </div>
         </FormItem>
       )
@@ -148,7 +160,7 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
         <FormControl>
           <Switch checked={getValues(field.name)}
             onClick={_ => {
-              return field.onChange(!field.value)
+              return ro ? null : field.onChange(!field.value)
             }} />
         </FormControl>
       </FormItem>
@@ -161,7 +173,7 @@ function FormFieldInputFromSchema({ fieldSchema, form }: NestedFieldProps): Form
     return (
       <FormItem>
         <FormLabel>{fieldSchema.name.toUpperCase()} | {fieldSchema.type}</FormLabel>
-        <Input {...field} value={value} />
+        <Input readOnly={ro} {...field} value={value} />
         <FormMessage />
       </FormItem>
     )
@@ -180,7 +192,7 @@ function FormFieldFromSchema(props: NestedFieldProps) {
 function FormFieldsFromSchema(props: NestedFormProps) {
   return (<>{
     props.schema.fields.map((field, i) => (
-      <FormFieldFromSchema key={i} fieldSchema={field} form={props.form} />
+      <FormFieldFromSchema key={i} fieldSchema={field} form={props.form} ro={props.ro} />
     ))}</>)
 }
 
@@ -296,18 +308,47 @@ export interface AttestWithSchemaProps {
   schema: string
   routerQuery: ParsedUrlQuery
   onSubmit: (parsedSchema: ParsedSchema, data: AttestWithSchemaFormSchema) => Promise<void>
+  attestation?: {
+    data: string,
+    recipient: string,
+    referencedAttestation: string,
+    revocable: boolean
+    revoked: boolean
+  }
 }
 
-export function AttestWithSchema({
-  schema, routerQuery, onSubmit
+export function AttestationForm({
+  schema, routerQuery, onSubmit, attestation
 }: AttestWithSchemaProps) {
+  const readOnly = !!attestation;
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false)
   const parsedSchema = parseSchema(schema) ?? { fields: [] };
   const FormSchema = BuildFormSchema(parsedSchema);
 
   const defaultFieldValues = getFieldsDefaultValues(parsedSchema, routerQuery);
 
-  const defaultValues = {
+  const decodedAttestation = (() => {
+    if (!attestation) {
+      return null
+    }
+    const fields = {} as Record<string, any>;
+
+    const encoder = new SchemaEncoder(schema);
+    const decodedItems = encoder.decodeData(attestation.data);
+
+    for (const decodedItem of decodedItems) {
+      fields[decodedItem.value.name] = decodedItem.value.value;
+    }
+
+    return {
+      recipient: attestation.recipient,
+      referencedAttestation: attestation.referencedAttestation,
+      revocable: attestation.revocable,
+      fields
+    }
+  })()
+
+  const defaultValues = decodedAttestation ?? {
     recipient: '',
     referencedAttestation: '',
     revocable: true,
@@ -321,9 +362,19 @@ export function AttestWithSchema({
 
   const { setValue, getValues } = form;
 
+  const title = (() => {
+    if (!attestation) {
+      return 'Make attestation'
+    } else if (!attestation.revoked) {
+      return 'Revoke attestation'
+    } else {
+      return 'Revoked attestation'
+    }
+  })();
+
   return (
     <>
-      <h1 className="text-3xl font-bold">Attest with schema</h1>
+      <h1 className="text-3xl font-bold">{title}</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit.bind(null, parsedSchema))} className="w-full space-y-6">
           <FormField
@@ -333,7 +384,9 @@ export function AttestWithSchema({
               <FormItem>
                 <FormLabel>Recipient</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex. vitalik.eth or 0x0000000000000000000000000000000000000000" {...field} />
+                  <Input
+                    readOnly={readOnly}
+                    placeholder="Ex. vitalik.eth or 0x0000000000000000000000000000000000000000" {...field} />
                 </FormControl>
                 <FormDescription>
                   Optional address or ENS name of the recipient.
@@ -342,7 +395,7 @@ export function AttestWithSchema({
               </FormItem>
             )} />
           {parsedSchema.fields.length > 0 && (
-            <FormFieldsFromSchema schema={parsedSchema} form={form} />
+            <FormFieldsFromSchema ro={readOnly} schema={parsedSchema} form={form} />
           )}
           <Collapsible
             open={advancedOptionsOpen}
@@ -368,7 +421,9 @@ export function AttestWithSchema({
                   <FormItem>
                     <FormLabel>Referenced Attestation UID (optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="ex: 0x0000000000000000000000000000000000000000000000000000000000000000" {...field} />
+                      <Input
+                        readOnly={readOnly}
+                        placeholder="ex: 0x0000000000000000000000000000000000000000000000000000000000000000" {...field} />
                     </FormControl>
                     <FormDescription>
                       UID of an attestation you want to reference.
@@ -390,15 +445,19 @@ export function AttestWithSchema({
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch id="revocable" checked={getValues().revocable}
-                        onClick={_ => setValue('revocable', !getValues().revocable)} />
+                      <Switch
+                        id="revocable" checked={getValues().revocable}
+                        onClick={_ => readOnly ? null : setValue('revocable', !getValues().revocable)} />
                     </FormControl>
                   </FormItem>
                 )} />
             </CollapsibleContent>
           </Collapsible>
           <div className="grid grid-cols-1">
-            <Button type="submit" className="col-span-1">Make attestation</Button>
+            {readOnly ?
+              (!attestation.revoked ?
+                <Button type="submit" variant="destructive" className="col-span-1">Revoke attestation</Button> : <></>) :
+              <Button type="submit" className="col-span-1">Make attestation</Button>}
           </div>
         </form>
       </Form>

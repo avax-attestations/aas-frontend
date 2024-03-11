@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Paginator } from "@/components/paginator";
 import { usePaginator } from "@/hooks/usePaginator";
 import { ReadonlyURLSearchParams } from "next/navigation";
+import Link from "next/link";
 
 export interface AttestationsProps {
   attestations: Attestation[]
@@ -83,23 +84,29 @@ export function Attestations({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {joined?.map(a => (<TableRow key={a.id}>
-              <TableCell>
-                {truncateEllipsis(a.uid, 13)}
-              </TableCell>
-              <TableCell>
-                #{a.schemaOrdinal} {a.schemaName ? `(${a.schemaName})` : ''}
-              </TableCell>
-              <TableCell>
-                {truncateEllipsis(a.attester, 15)}
-              </TableCell>
-              <TableCell>
-                {truncateEllipsis(a.recipient, 15)}
-              </TableCell>
-              <TableCell>
-                {timeAgo(a.time)}
-              </TableCell>
-            </TableRow>))}
+            {joined?.map(a => {
+              const truncatedUid = truncateEllipsis(a.uid, 13)
+
+              return (<TableRow key={a.id}>
+                <TableCell>
+                  <Link href={`/attestation/${a.uid}`}>
+                    {a.revoked ? <s className="text-red-500">{truncatedUid}</s> : truncatedUid}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  #{a.schemaOrdinal} {a.schemaName ? `(${a.schemaName})` : ''}
+                </TableCell>
+                <TableCell>
+                  {truncateEllipsis(a.attester, 15)}
+                </TableCell>
+                <TableCell>
+                  {truncateEllipsis(a.recipient, 15)}
+                </TableCell>
+                <TableCell>
+                  {timeAgo(a.time)}
+                </TableCell>
+              </TableRow>)
+            })}
           </TableBody>
         </Table>
       </div>

@@ -7,23 +7,36 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
 import { AttestationForm } from "@/components/attestation-form";
 
-export default function AttestWithSchemaPage() {
+export default function AttestationPage() {
   const db = useDb();
   const router = useRouter();
   const signer = useSigner();
   const { toast } = useToast();
   const { easAddress } = useAddresses();
 
-  const schemaUid = router.query['schema-uid'];
+  const uid = router.query['uid'];
+  const attestation = useLiveQuery(
+    () => db.attestations.where('uid').equals(uid ?? '').first(),
+    [db, uid]);
+
+  const schemaUid = attestation?.schemaId;
+
   const schema = useLiveQuery(
     () => db.schemas.where('uid').equals(schemaUid ?? '').first(),
     [db, schemaUid]);
 
-  return schema ? (
+  return schema && attestation ? (
     <AttestationForm
       schema={schema.schema}
       routerQuery={router.query}
-      onSubmit={async (parsedSchema, data) => {
+      attestation={{
+        recipient: attestation.recipient,
+        revocable: attestation.revocable,
+        referencedAttestation: attestation.refUID,
+        data: attestation.data,
+        revoked: attestation.revoked,
+      }}
+      onSubmit={async (parsedSchema) => {
         if (!signer || !schema || !parsedSchema) {
           toast({
             variant: 'destructive',
@@ -36,33 +49,15 @@ export default function AttestWithSchemaPage() {
         const eas = new EAS(easAddress);
         eas.connect(signer);
 
-        const schemaEncoder = new SchemaEncoder(schema.schema);
-
-        const toEncode: { name: string, type: string, value: any }[] = [];
-        for (const field of parsedSchema.fields) {
-          toEncode.push({
-            name: field.name,
-            type: field.isArray ? `${field.type}[]` : field.type,
-            value: data.fields[field.name],
-          });
-        }
-
-        const encodedData = schemaEncoder.encodeData(toEncode);
-
         const t = toast({
-          description: 'Making attestation...',
+          description: 'Revoking attestation...',
           duration: 10000000
         })
 
         try {
-          const tx = await eas.attest({
+          const tx = await eas.revoke({
             schema: schema.uid,
-            data: {
-              recipient: data.recipient || '0x0000000000000000000000000000000000000000',
-              revocable: data.revocable,
-              expirationTime: data.expirationTime,
-              data: encodedData,
-            }
+            data: { uid: attestation.uid }
           });
 
           await tx.wait(1);
@@ -70,7 +65,7 @@ export default function AttestWithSchemaPage() {
         } catch (err: any) {
           toast({
             variant: 'destructive',
-            title: 'Error making attestation',
+            title: 'Error revoking attestation',
             description: err.message,
             duration: 5000,
           });
