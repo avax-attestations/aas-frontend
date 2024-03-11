@@ -1,7 +1,7 @@
 import { useSearchParams } from "next/navigation";
 import { useWalletClient } from "wagmi";
 import { Schemas } from "@/components/schemas";
-import { useSchemaQuery } from "@/hooks/useSchemaQuery";
+import { useSchemaQuery } from "@/hooks/query/useSchemaQuery";
 
 export default function SchemasPage() {
   const searchParams = useSearchParams();

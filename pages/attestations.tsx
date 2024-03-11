@@ -1,6 +1,6 @@
 import { useSearchParams } from "next/navigation";
 import { Attestations } from "@/components/attestations";
-import { useAttestationQuery } from "@/hooks/useAttestationQuery";
+import { useAttestationQuery } from "@/hooks/query/useAttestationQuery";
 
 export default function AttestationsPage() {
   const searchParams = useSearchParams();
@@ -9,7 +9,6 @@ export default function AttestationsPage() {
 
   const {
     attestations,
-    schemas,
     totalRecords,
   } = useAttestationQuery({
     searchParams,
@@ -19,7 +18,6 @@ export default function AttestationsPage() {
   return (
     <Attestations
       attestations={attestations}
-      schemas={schemas}
       searchParams={searchParams}
       totalRecords={totalRecords}
       pageSize={pageSize}

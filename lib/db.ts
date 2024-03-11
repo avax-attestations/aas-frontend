@@ -12,7 +12,7 @@ export interface Schema {
   schema: string
   creator: string
   resolver: string
-  time: string
+  time: number
   txid: string
   revocable: boolean
   name: string
@@ -27,9 +27,9 @@ export interface Attestation {
   attester: string
   recipient: string
   refUID: string
-  revocationTime: string
-  expirationTime: string
-  time: string
+  revocationTime: number
+  expirationTime: number
+  time: number
   txid: string
   revoked: boolean
   timeCreated: number
@@ -39,12 +39,12 @@ export interface Attestation {
 
 export interface Timestamp {
   uid: string
-  timestamp: string
+  timestamp: number
   from: string
   txid: string
 }
 
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 class AASDexie extends Dexie {
 

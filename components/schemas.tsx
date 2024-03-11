@@ -6,12 +6,12 @@ import { PlusCircle, SquarePen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Paginator } from "@/components/paginator";
 import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
-import { Schema } from "@/lib/db";
 import Link from "next/link";
 import { usePaginator } from "@/hooks/usePaginator";
+import { SchemaQueryRow } from "@/hooks/query/useSchemaQuery";
 
 export interface SchemasProps {
-  schemas: Schema[]
+  schemas: SchemaQueryRow[]
   searchParams: ReadonlyURLSearchParams
   totalRecords: number
   pageSize: number
@@ -102,7 +102,7 @@ export function Schemas({
                       asChild
                       variant="link"
                       title="Name this schema">
-                      <Link href={`/attest-with-schema/${NAME_A_SCHEMA_UID}?def-schemaId=${s.uid}`}>
+                      <Link href={`/attest/${NAME_A_SCHEMA_UID}?def-schemaId=${s.uid}`}>
                         <SquarePen />
                       </Link>
                     </Button>
@@ -122,7 +122,7 @@ export function Schemas({
                     asChild
                     variant="outline"
                     title="Attest with schema">
-                    <Link href={`/attest-with-schema/${s.uid}`}>
+                    <Link href={`/attest/${s.uid}`}>
                       <PlusCircle className="" />
                     </Link>
                   </Button>

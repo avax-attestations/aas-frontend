@@ -1,5 +1,4 @@
-import { type Database, type EntityFromTableName, type TableName, type Attestation, type Schema } from './db'
-import { type Table } from 'dexie';
+import { type Database, type EntityFromTableName, type TableName, type Schema } from './db'
 import { PublicClient, decodeEventLog, zeroHash } from 'viem';
 import { BLOCK_BATCH_SIZE, DEPLOYMENT, type Chain } from './config';
 import { Abi, AbiEvent } from 'abitype';
@@ -134,7 +133,7 @@ export async function index(chain: Chain, db: Database, client: PublicClient, ea
           mutations.push(...(await handleAttestedEvent(event, eas, db, schemaCache)))
           break;
         case 'Revoked':
-          mutations.push(...(await handleRevokedEvent(event, eas, db, schemaCache)))
+          mutations.push(...(await handleRevokedEvent(event, eas)))
           break;
         // case 'RevokedOffchain':
         //   mutations.push(...(await handleRevokedOffchainEvent(event)))
@@ -204,7 +203,7 @@ async function handleSchemaRegisteredEvent(event: Event, schemaCache: Record<str
     schema: args.schema.schema as string,
     creator: event.transaction.from,
     resolver: args.schema.resolver as string,
-    time: timeStr(event.block.timestamp),
+    time: timeToNumber(event.block.timestamp),
     txid: event.transaction.hash,
     revocable: args.schema.revocable as boolean,
     name: '',
@@ -218,8 +217,8 @@ async function handleSchemaRegisteredEvent(event: Event, schemaCache: Record<str
   }]
 }
 
-function timeStr(timestamp: bigint) {
-  return timestamp.toString().padStart(12, '0')
+function timeToNumber(timestamp: bigint) {
+  return Number(timestamp)
 }
 
 async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
@@ -280,9 +279,9 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
       attester: attestation.attester,
       recipient: attestation.recipient,
       refUID: attestation.refUID,
-      revocationTime: timeStr(attestation.revocationTime),
-      expirationTime: timeStr(attestation.expirationTime),
-      time: timeStr(attestation.time),
+      revocationTime: timeToNumber(attestation.revocationTime),
+      expirationTime: timeToNumber(attestation.expirationTime),
+      time: timeToNumber(attestation.time),
       txid: event.transaction.hash,
       revoked: attestation.revocationTime < BigInt(timeCreated) && attestation.revocationTime !== 0n,
       timeCreated,
@@ -330,7 +329,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
   return result
 }
 
-async function handleRevokedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
+async function handleRevokedEvent(event: Event, eas: EAS): Promise<Mutations> {
   const args = event.decodedEvent.args as any
 
   const attestation = await eas.getAttestation(args.uid)
@@ -341,7 +340,7 @@ async function handleRevokedEvent(event: Event, eas: EAS, db: Database, schemaCa
     data: {
       uid: attestation.uid,
       revoked: true,
-      revocationTime: timeStr(attestation.revocationTime)
+      revocationTime: timeToNumber(attestation.revocationTime)
     }
   }] as Mutations;
 
@@ -357,7 +356,7 @@ async function handleTimestampedEvent(event: Event): Promise<Mutations> {
     table: 'timestamps',
     data: {
       uid: uid ?? '',
-      timestamp: timeStr(timestamp),
+      timestamp: timeToNumber(timestamp),
       from: event.transaction.from,
       txid: event.transaction.hash
     }

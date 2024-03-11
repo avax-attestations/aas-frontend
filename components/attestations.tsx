@@ -1,4 +1,3 @@
-import type { Attestation, Schema } from "@/lib/db";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { timeAgo, truncateEllipsis } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -7,10 +6,10 @@ import { Paginator } from "@/components/paginator";
 import { usePaginator } from "@/hooks/usePaginator";
 import { ReadonlyURLSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AttestationQueryRow } from "@/hooks/query/useAttestationQuery";
 
 export interface AttestationsProps {
-  attestations: Attestation[]
-  schemas: Schema[]
+  attestations: AttestationQueryRow[]
   searchParams: ReadonlyURLSearchParams
   totalRecords: number
   pageSize: number
@@ -20,7 +19,6 @@ export function Attestations({
   totalRecords,
   searchParams,
   attestations,
-  schemas
 }: AttestationsProps) {
 
   const {
@@ -33,17 +31,6 @@ export function Attestations({
     pageSize: 20,
     searchParams
   })
-
-  const joined = (schemas && attestations) ? attestations.map(a => {
-    const schema = schemas.find(s => s.uid === a.schemaId)
-    const schemaName = schema?.name ?? ''
-    const schemaOrdinal = schema?.id ?? -1
-    return {
-      ...a,
-      schemaName,
-      schemaOrdinal
-    }
-  }) : []
 
   return (
     <>
@@ -84,7 +71,7 @@ export function Attestations({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {joined?.map(a => {
+            {attestations.map(a => {
               const truncatedUid = truncateEllipsis(a.uid, 13)
 
               return (<TableRow key={a.id}>
@@ -94,7 +81,7 @@ export function Attestations({
                   </Link>
                 </TableCell>
                 <TableCell>
-                  #{a.schemaOrdinal} {a.schemaName ? `(${a.schemaName})` : ''}
+                  #{a.schemaId} {a.schemaName ? `(${a.schemaName})` : ''}
                 </TableCell>
                 <TableCell>
                   {truncateEllipsis(a.attester, 15)}

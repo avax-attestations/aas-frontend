@@ -1,6 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -22,8 +21,8 @@ export function sleep(milliseconds: number) {
   });
 }
 
-export function timeAgo(timestamp: string): string {
-  const date = new Date(Number(timestamp) * 1000)
+export function timeAgo(timestampInSeconds: number): string {
+  const date = new Date(timestampInSeconds * 1000)
   const now = new Date();
   const diffMs = now.getTime() - date.getTime(); // Difference in milliseconds
   const diffSecs = Math.round(diffMs / 1000);
@@ -49,4 +48,3 @@ export function timeAgo(timestamp: string): string {
     return pluralize('day', diffDays);
   }
 }
-
