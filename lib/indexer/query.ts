@@ -1,9 +1,9 @@
-import { type Database, type EntityFromTableName, type TableName, type Schema } from './db'
+import type { TableName, Schema, EntityFromTableName } from '@/lib/db'
 import { PublicClient, decodeEventLog, zeroHash } from 'viem';
-import { BLOCK_BATCH_SIZE, DEPLOYMENT, type Chain } from './config';
+import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Abi, AbiEvent } from 'abitype';
 import { type Attestation as EASAttestation, type EAS, SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
-import { sleep } from './utils';
+import { sleep } from '@/lib/utils';
 
 function min(a: bigint, b: bigint) {
   return a < b ? a : b;
@@ -59,9 +59,13 @@ export const schemaNameUID =
   "0x44d562ac1d7cd77e232978687fea027ace48f719cf1d58c7888e509663bb87fc";
 
 
-export async function index(chain: Chain, db: Database, client: PublicClient, eas: EAS) {
-  // await db.properties.clear()
-  // await db.schemas.clear()
+export async function computeMutations(
+  chain: Chain,
+  client: PublicClient,
+  eas: EAS,
+  blockBatchSize: bigint,
+  db: Database
+): Promise<[true, bigint, Mutations] | [false] > {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
   const schemaRegistryAddress = DEPLOYMENT[chain].schemaRegistry.address;
   const easAbi = DEPLOYMENT[chain].eas.abi;
@@ -78,7 +82,7 @@ export async function index(chain: Chain, db: Database, client: PublicClient, ea
   const easEvents = [attestedEvent, revokedEvent, revokedOffchainEvent, timestampedEvent]
 
   const fromBlock = await (async () => {
-    const result = await db.properties.get('lastBlock')
+    const result = await db.getLastBlock();
     if (!result) {
       const hash = DEPLOYMENT[chain].schemaRegistry.deploymentTxn
       if (hash === '0x0') {
@@ -87,97 +91,70 @@ export async function index(chain: Chain, db: Database, client: PublicClient, ea
       const txn = await client.getTransaction({ hash });
       return txn.blockNumber;
     }
-    return BigInt(result.value)
+    return BigInt(result)
   })();
 
   let currentBlock = fromBlock;
   const latestBlock = (await client.getBlock()).number;
 
-  while (currentBlock <= latestBlock) {
-    const toBlock = min(currentBlock + BLOCK_BATCH_SIZE, latestBlock);
-    if (toBlock - currentBlock > 1n) {
-      console.log(`${new Date().toISOString()} - Fetching events from block ${currentBlock} to ${toBlock}`);
-    }
+  if (currentBlock > latestBlock) {
+    return [false]
+  }
 
-    // schemas
-    const decodedSchemaRegistryEvents = await getEventsInBlockRange(
-      client,
-      schemaRegistryAddress,
-      schemaRegistryAbi,
-      schemaRegistryEvents,
-      currentBlock,
-      toBlock
-    )
+  const toBlock = min(currentBlock + blockBatchSize, latestBlock);
+  if (toBlock - currentBlock > 1n) {
+    console.log(`${new Date().toISOString()} - Fetching events from block ${currentBlock} to ${toBlock}`);
+  }
 
-    const decodedEasEvents = await getEventsInBlockRange(
-      client,
-      easAddress,
-      easAbi,
-      easEvents,
-      currentBlock,
-      toBlock
-    )
+  // schemas
+  const decodedSchemaRegistryEvents = await getEventsInBlockRange(
+    client,
+    schemaRegistryAddress,
+    schemaRegistryAbi,
+    schemaRegistryEvents,
+    currentBlock,
+    toBlock
+  )
 
-    const allEvents = decodedSchemaRegistryEvents.concat(decodedEasEvents)
+  const decodedEasEvents = await getEventsInBlockRange(
+    client,
+    easAddress,
+    easAbi,
+    easEvents,
+    currentBlock,
+    toBlock
+  )
 
-    currentBlock = toBlock + 1n;
+  const allEvents = decodedSchemaRegistryEvents.concat(decodedEasEvents)
 
-    const mutations = [] as Mutations
-    const schemaCache = {} as Record<string, Schema>
-    for (const event of allEvents) {
-      switch (event.decodedEvent.eventName) {
-        case 'Registered':
-          mutations.push(...(await handleSchemaRegisteredEvent(event, schemaCache)))
-          break;
-        case 'Attested':
-          mutations.push(...(await handleAttestedEvent(event, eas, db, schemaCache)))
-          break;
-        case 'Revoked':
-          mutations.push(...(await handleRevokedEvent(event, eas)))
-          break;
-        // case 'RevokedOffchain':
-        //   mutations.push(...(await handleRevokedOffchainEvent(event)))
-        //   break;
-        case 'Timestamped':
-          mutations.push(...(await handleTimestampedEvent(event)))
-          break;
-        default:
-          console.warn(`Unexpected event ${event.decodedEvent.eventName}`)
-          break;
-      }
-      console.log(event.decodedEvent.eventName)
-    }
+  currentBlock = toBlock + 1n;
 
-    try {
-      await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
-        await db.properties.put({ key: 'lastBlock', value: currentBlock.toString() });
-
-        for (const mut of mutations) {
-          const op = mut.operation
-          switch (op) {
-            case 'put':
-              // It seems typescript cannot infer that the operation below is safe
-              // so we have to cast to unknown/any
-              await db[mut.table].put(mut.data as unknown as any)
-              break;
-            case 'modify':
-              if (mut.data.uid) {
-                await db[mut.table].where('uid').equals(mut.data.uid).modify(mut.data)
-              } else {
-                console.warn('Modify operation missing uid')
-              }
-              break;
-            default:
-              console.warn(`Invalid mutation "${op}"`)
-              break;
-          }
-        }
-      })
-    } catch (err) {
-      console.error('DB transaction failed, retrying after 5 seconds', err)
-      await sleep(5000);
+  const mutations = [] as Mutations
+  const schemaCache = {} as Record<string, Schema>
+  for (const event of allEvents) {
+    switch (event.decodedEvent.eventName) {
+      case 'Registered':
+        mutations.push(...(await handleSchemaRegisteredEvent(event, schemaCache)))
+        break;
+      case 'Attested':
+        mutations.push(...(await handleAttestedEvent(event, eas, db, schemaCache)))
+        break;
+      case 'Revoked':
+        mutations.push(...(await handleRevokedEvent(event, eas)))
+        break;
+      // case 'RevokedOffchain':
+      //   mutations.push(...(await handleRevokedOffchainEvent(event)))
+      //   break;
+      case 'Timestamped':
+        mutations.push(...(await handleTimestampedEvent(event)))
+        break;
+      default:
+        console.warn(`Unexpected event ${event.decodedEvent.eventName}`)
+        break;
     }
   }
+
+  return [true, currentBlock, mutations]
 }
 
 type PutMutation<T extends TableName> = {
@@ -221,6 +198,11 @@ function timeToNumber(timestamp: bigint) {
   return Number(timestamp)
 }
 
+interface Database {
+  getSchema: (uid: string) => Promise<Schema>
+  getLastBlock: () => Promise<bigint>
+}
+
 async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
   const args = event.decodedEvent.args as any
   let attestation: EASAttestation
@@ -245,11 +227,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
       // get from cache
       return schemaCache[attestation.schema]
     }
-    const schemas = await db.schemas.where('uid').equals(attestation.schema).toArray()
-    if (schemas.length !== 1) {
-      throw new Error(`Cannot find schema with uid ${attestation.schema}`)
-    }
-    return schemas[0]
+    return db.getSchema(attestation.schema)
   })()
   schema.attestationCount++;
 
@@ -307,11 +285,7 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
         // get from cache
         return schemaCache[uid]
       }
-      const schemas = await db.schemas.where('uid').equals(uid).toArray()
-      if (schemas.length !== 1) {
-        throw new Error(`Cannot find schema with uid ${uid}`)
-      }
-      return schemas[0]
+      return db.getSchema(uid)
     })()
 
     if (schemaBeingNamed.creator.toLowerCase() === attestation.attester.toLowerCase()) {

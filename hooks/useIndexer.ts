@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { usePublicClient } from "wagmi";
-import { index } from "@/lib/indexer";
+import { index } from "@/lib/indexer/persist";
 import { useChain } from "./useChain";
 import { useDb } from "./useDb";
 import { EAS, type TransactionSigner } from "@ethereum-attestation-service/eas-sdk"
@@ -37,7 +37,7 @@ export function useIndexer() {
         return;
       }
 
-      index(chain, db, client, eas).then(() => {
+      index(chain, client, eas, db).then(() => {
         timeout = setTimeout(run, POLL_INTERVAL)
       })
     }
