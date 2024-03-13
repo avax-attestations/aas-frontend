@@ -57,7 +57,7 @@ export async function resume(chain: Chain, db: Database, basePath: string) {
       }
     }
     const checkpointsLatestBlock = data[data.length - 1]?.max
-    if (lastBlock !== checkpointsLatestBlock) {
+    if (lastBlock < checkpointsLatestBlock) {
       console.log('Updating latest block to', checkpointsLatestBlock)
       await db.properties.put({ key: 'lastBlock', value: checkpointsLatestBlock.toString() });
     }
