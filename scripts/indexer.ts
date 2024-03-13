@@ -11,20 +11,15 @@ import { publicClientToProvider } from '@/hooks/useProvider';
 program
   .addOption(new Option('-c, --chain <chain>', 'Chain to index')
     .choices(Object.keys(DEPLOYMENT)).makeOptionMandatory(true))
-  .argument('<db-dir>', 'Directory to store sqlite database')
   .argument('<out-dir>', 'Directory to store indexing results')
 
 const parsed = program.parse(process.argv)
 const opts = parsed.opts()
 const args = parsed.args
 
-const dbDir = args[0]
-const outDir = args[1]
+const outDir = args[0]
 
-const db = new sqlite3(`${dbDir}/${opts.chain.toLowerCase().replace(' ', '-')}.db`, {
-  nativeBinding: './node_modules/better-sqlite3/build/Release/better_sqlite3.node'
-})
-db.exec(`
+const setup = `
 CREATE TABLE IF NOT EXISTS properties (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -41,7 +36,40 @@ CREATE TABLE IF NOT EXISTS mutations (
 CREATE TABLE IF NOT EXISTS schemas (
   uid TEXT PRIMARY KEY,
   data TEXT NOT NULL
-);`)
+);`
+
+const DB_VERSION = 1
+
+const createDb = (chain: string): ReturnType<typeof sqlite3> => {
+  const path = `${outDir}/index.db`
+  const opts = {
+    nativeBinding: './node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+  }
+  const db = new sqlite3(path, opts)
+  db.exec(setup)
+
+  const version = (() => {
+    let getVersion = db.prepare("SELECT value FROM properties WHERE key = 'version'")
+    const row = getVersion.get()
+    if (!row) {
+      return DB_VERSION
+    }
+    return parseInt((row as any).value)
+  })()
+
+  if (version !== DB_VERSION) {
+    // drop db
+    db.close()
+    fs.rmSync(path)
+    return createDb(chain)
+  }
+
+  return db;
+}
+
+const db = createDb(opts.chain)
+const setVersion = db.prepare("REPLACE INTO properties (key, value) VALUES ('version', ?)")
+setVersion.run(DB_VERSION)
 
 const insertMutationStmt = db.prepare("INSERT INTO mutations (block, table_name, operation, data) VALUES (?, ?, ?, ?)")
 const getSchemaStmt = db.prepare("SELECT data FROM schemas WHERE uid = ?")

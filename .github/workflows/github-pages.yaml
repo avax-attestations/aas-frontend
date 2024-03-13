@@ -50,7 +50,7 @@ jobs:
           # You may remove this line if you want to manage the configuration yourself.
           static_site_generator: next
           generator_config_file: next.config.mjs
-      - name: Restore next cache
+      - name: Restore cache
         uses: actions/cache@v4
         with:
           path: |
@@ -64,23 +64,17 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build with Next.js
         run: pnpm next build
-      - name: Restore indexing cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/indexing-cache
-          key: indexer-database
       - name: Run indexing jobs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -pv ~/indexing-cache
           pages_url=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.html_url')
           echo "Github pages URL: $pages_url"
           (
           mkdir -pv ./out/indexing/avalanche-fuji
+          wget -O ./out/indexing/avalanche-fuji/index.db ${pages_url}/indexing/avalanche-fuji/index.db || echo "Failed to download index checkpoint"
           node scripts/esbuild.js
-          node ./indexer.js --chain "Avalanche Fuji" ~/indexing-cache ./out/indexing/avalanche-fuji
+          node ./indexer.js --chain "Avalanche Fuji" ./out/indexing/avalanche-fuji
           ) &
           wait
           echo "All indexing jobs are done"
