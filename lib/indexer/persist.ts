@@ -49,19 +49,11 @@ export async function resume(chain: Chain, db: Database, basePath: string) {
 
   const lastCheckpoint = ((await db.properties.get('lastCheckpoint')) ?? { value: '' }).value
   const lastBlock = parseInt(((await db.properties.get('lastBlock')) ?? { value: '0' }).value)
-  await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
-    for (const checkpoint of data) {
-      if (checkpoint.max >= lastBlock && checkpoint.hash !== lastCheckpoint) {
-        await processCheckpoint(db, checkpoint, baseURL)
-        await db.properties.put({ key: 'lastCheckpoint', value: checkpoint.hash });
-      }
+  for (const checkpoint of data) {
+    if (checkpoint.max >= lastBlock && checkpoint.hash !== lastCheckpoint) {
+      await processCheckpoint(db, checkpoint, baseURL)
     }
-    const checkpointsLatestBlock = data[data.length - 1]?.max
-    if (lastBlock < checkpointsLatestBlock) {
-      console.log('Updating latest block to', checkpointsLatestBlock)
-      await db.properties.put({ key: 'lastBlock', value: checkpointsLatestBlock.toString() });
-    }
-  })
+  }
 }
 
 async function processCheckpoint(db: Database, checkpoint: any, baseURL: string) {
@@ -73,7 +65,13 @@ async function processCheckpoint(db: Database, checkpoint: any, baseURL: string)
   }
   const data = await response.json()
   const currentBlock = BigInt(checkpoint.max)
-  await persist(db, data, currentBlock)
+  await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
+    await persist(db, data, currentBlock)
+    await db.properties.put({ key: 'lastCheckpoint', value: checkpoint.hash });
+    console.log('Updating latest block to', checkpoint.max)
+    console.log('Updating checkpoint to', checkpoint.hash)
+    await db.properties.put({ key: 'lastBlock', value: checkpoint.max.toString() });
+  })
 }
 
 export async function persist(db: Database, mutations: Mutations, currentBlock: bigint) {
