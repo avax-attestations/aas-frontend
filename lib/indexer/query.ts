@@ -20,6 +20,28 @@ function getEventFromAbi(abi: Abi, eventName: string) {
   return event as AbiEvent;
 }
 
+async function getEventsInBlockRangeRetry(
+  client: PublicClient,
+  contractAddress: `0x${string}`,
+  abi: Abi,
+  events: AbiEvent[],
+  fromBlock: bigint,
+  toBlock: bigint
+) {
+  let tries = 1;
+  while (true) {
+    try {
+      return await getEventsInBlockRange(client, contractAddress, abi, events, fromBlock, toBlock)
+    } catch (err) {
+      await sleep(1000)
+      tries++
+      if (tries > 5) {
+        console.error('failed to get events in block range', fromBlock, toBlock, err)
+        throw err
+      }
+    }
+  }
+}
 async function getEventsInBlockRange(
   client: PublicClient,
   contractAddress: `0x${string}`,
@@ -64,7 +86,7 @@ export async function computeMutations(
   client: PublicClient,
   eas: EAS,
   db: Database
-): Promise<[true, bigint, Mutations] | [false] > {
+): Promise<[true, bigint, Mutations] | [false]> {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
   const schemaRegistryAddress = DEPLOYMENT[chain].schemaRegistry.address;
   const easAbi = DEPLOYMENT[chain].eas.abi;
@@ -95,7 +117,8 @@ export async function computeMutations(
   })();
 
   let currentBlock = fromBlock;
-  const latestBlock = (await client.getBlock()).number;
+  const block = await client.getBlock({ blockTag: 'latest' });
+  const latestBlock = block.number;
 
   if (currentBlock > latestBlock) {
     return [false]
@@ -107,7 +130,7 @@ export async function computeMutations(
   }
 
   // schemas
-  const decodedSchemaRegistryEvents = await getEventsInBlockRange(
+  const decodedSchemaRegistryEvents = await getEventsInBlockRangeRetry(
     client,
     schemaRegistryAddress,
     schemaRegistryAbi,
@@ -116,7 +139,7 @@ export async function computeMutations(
     toBlock
   )
 
-  const decodedEasEvents = await getEventsInBlockRange(
+  const decodedEasEvents = await getEventsInBlockRangeRetry(
     client,
     easAddress,
     easAbi,
