@@ -7,7 +7,7 @@ import { type EAS } from '@ethereum-attestation-service/eas-sdk';
 
 export async function index(chain: Chain, client: PublicClient, eas: EAS, db: Database) {
   while (true) {
-    const [fetched, currentBlock, mutations] = await computeMutations(chain, client, eas, {
+    const [fetched, nextBlock, mutations] = await computeMutations(chain, client, eas, {
       getSchema: async (uid) => {
         const items = await db.schemas.where('uid').equals(uid).toArray()
         if (items.length !== 1) {
@@ -15,12 +15,12 @@ export async function index(chain: Chain, client: PublicClient, eas: EAS, db: Da
         }
         return items[0]
       },
-      getLastBlock: async () => {
-        const result = await db.properties.get('lastBlock')
+      getNextBlock: async () => {
+        const result = await db.properties.get('nextBlock')
         if (!result) {
-          return 0n
+          return 0
         }
-        return BigInt(result.value)
+        return Number(result.value)
       }
     })
 
@@ -29,8 +29,8 @@ export async function index(chain: Chain, client: PublicClient, eas: EAS, db: Da
     }
 
     await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
-      await persist(db, mutations, currentBlock)
-      await db.properties.put({ key: 'lastBlock', value: currentBlock.toString() });
+      await persist(db, mutations, nextBlock)
+      await db.properties.put({ key: 'nextBlock', value: nextBlock });
     })
   }
 }
@@ -48,15 +48,15 @@ export async function resume(chain: Chain, db: Database, basePath: string) {
   const data = await response.json()
 
   const lastCheckpoint = ((await db.properties.get('lastCheckpoint')) ?? { value: '' }).value
-  const lastBlock = parseInt(((await db.properties.get('lastBlock')) ?? { value: '0' }).value)
+  const nextBlock = ((await db.properties.get('nextBlock')) ?? { value: 0 }).value
   for (const checkpoint of data) {
-    if (checkpoint.max >= lastBlock && checkpoint.hash !== lastCheckpoint) {
-      await processCheckpoint(db, checkpoint, baseURL)
+    if (checkpoint.max >= nextBlock && checkpoint.hash !== lastCheckpoint) {
+      await processCheckpoint(db, checkpoint, baseURL, nextBlock)
     }
   }
 }
 
-async function processCheckpoint(db: Database, checkpoint: any, baseURL: string) {
+async function processCheckpoint(db: Database, checkpoint: any, baseURL: string, nextBlock: number) {
   console.log(`Processing checkpoint ${checkpoint.hash}...`)
   const response = await fetch(`${baseURL}/${checkpoint.hash}.json`)
   if (response.status >= 400) {
@@ -64,22 +64,21 @@ async function processCheckpoint(db: Database, checkpoint: any, baseURL: string)
     return
   }
   const data = await response.json()
-  const currentBlock = BigInt(checkpoint.max)
   await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
-    await persist(db, data, currentBlock)
-    await db.properties.put({ key: 'lastCheckpoint', value: checkpoint.hash });
+    await persist(db, data, nextBlock)
     console.log('Updating latest block to', checkpoint.max)
     console.log('Updating checkpoint to', checkpoint.hash)
-    await db.properties.put({ key: 'lastBlock', value: checkpoint.max.toString() });
+    await db.properties.put({ key: 'lastCheckpoint', value: checkpoint.hash });
+    await db.properties.put({ key: 'nextBlock', value: checkpoint.max + 1 });
   })
 }
 
-export async function persist(db: Database, mutations: Mutations, currentBlock: bigint) {
+export async function persist(db: Database, mutations: Mutations, nextBlock: number) {
   if (mutations.length) {
     console.log(`Processing ${mutations.length} mutations`)
   }
   for (const mut of mutations) {
-    if (mut.blockNumber > currentBlock) {
+    if (mut.blockNumber < nextBlock) {
       continue
     }
     const op = mut.operation

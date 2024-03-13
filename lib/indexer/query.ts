@@ -86,7 +86,7 @@ export async function computeMutations(
   client: PublicClient,
   eas: EAS,
   db: Database
-): Promise<[true, bigint, Mutations] | [false]> {
+): Promise<[true, number, Mutations] | [false]> {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
   const schemaRegistryAddress = DEPLOYMENT[chain].schemaRegistry.address;
   const easAbi = DEPLOYMENT[chain].eas.abi;
@@ -104,7 +104,7 @@ export async function computeMutations(
   const easEvents = [attestedEvent, revokedEvent, revokedOffchainEvent, timestampedEvent]
 
   const fromBlock = await (async () => {
-    const result = await db.getLastBlock();
+    const result = await db.getNextBlock();
     if (!result) {
       const hash = DEPLOYMENT[chain].schemaRegistry.deploymentTxn
       if (hash === '0x0') {
@@ -177,7 +177,7 @@ export async function computeMutations(
     }
   }
 
-  return [true, currentBlock, mutations]
+  return [true, Number(currentBlock), mutations]
 }
 
 type PutMutation<T extends TableName> = {
@@ -226,7 +226,7 @@ function timeToNumber(timestamp: bigint) {
 
 interface Database {
   getSchema: (uid: string) => Promise<Schema>
-  getLastBlock: () => Promise<bigint>
+  getNextBlock: () => Promise<number>
 }
 
 async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {

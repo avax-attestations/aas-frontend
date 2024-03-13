@@ -3,7 +3,7 @@ import { type Chain } from '@/lib/config';
 
 interface Property {
   key: string
-  value: string
+  value: any
 }
 
 export interface Schema {
@@ -44,7 +44,7 @@ export interface Timestamp {
   txid: string
 }
 
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 class AASDexie extends Dexie {
 

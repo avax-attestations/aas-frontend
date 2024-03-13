@@ -44,16 +44,16 @@ CREATE TABLE IF NOT EXISTS schemas (
 const insertMutationStmt = db.prepare("INSERT INTO mutations (block, table_name, operation, data) VALUES (?, ?, ?, ?)")
 const getSchemaStmt = db.prepare("SELECT data FROM schemas WHERE uid = ?")
 const updateSchemaStmt = db.prepare("REPLACE INTO schemas (uid, data) VALUES (?, ?)")
-const getLastBlockStmt = db.prepare("SELECT value FROM properties WHERE key = 'lastBlock'")
-const updateLastBlockStmt = db.prepare("REPLACE INTO properties (key, value) VALUES ('lastBlock', ?)")
+const getNextBlockStmt = db.prepare("SELECT value FROM properties WHERE key = 'nextBlock'")
+const updateNextBlockStmt = db.prepare("REPLACE INTO properties (key, value) VALUES ('nextBlock', ?)")
 const queryMutations = db.prepare("SELECT * FROM mutations WHERE id > ? ORDER BY id LIMIT 1000")
 
-async function getLastBlock() {
-  const row = getLastBlockStmt.get()
+async function getNextBlock() {
+  const row = getNextBlockStmt.get()
   if (!row) {
-    return 0n
+    return 0
   }
-  return BigInt((row as any).value)
+  return (row as any).value
 }
 
 async function getSchema(uid: string) {
@@ -83,17 +83,17 @@ async function index() {
   eas.connect(provider)
 
   while (true) {
-    const [fetched, currentBlock, mutations] = await computeMutations(chainName, client, eas, {
+    const [fetched, nextBlock, mutations] = await computeMutations(chainName, client, eas, {
       getSchema,
-      getLastBlock
+      getNextBlock
     })
 
     if (!fetched) {
       break
     }
 
-    db.transaction((currentBlock, mutations) => {
-      updateLastBlockStmt.run(currentBlock.toString())
+    db.transaction((nextBlock, mutations) => {
+      updateNextBlockStmt.run(nextBlock)
       for (const mut of mutations) {
         insertMutationStmt.run(mut.blockNumber, mut.table, mut.operation, JSON.stringify(mut.data))
       }
@@ -116,7 +116,7 @@ async function index() {
         })()
         updateSchemaStmt.run(mut.data.uid, JSON.stringify(modified))
       }
-    })(currentBlock, mutations);
+    })(nextBlock, mutations);
   }
 
   // Fetch mutations from db in batches and write to stdout
@@ -149,7 +149,7 @@ async function index() {
     index.push({ min, max, hash })
   }
 
-  index[index.length - 1].max = Number(await getLastBlock()) - 1
+  index[index.length - 1].max = Number(await getNextBlock()) - 1
   const fname = `${storageDir}/index.json`
   console.log('writing', fname)
   fs.writeFileSync(fname, JSON.stringify(index))
