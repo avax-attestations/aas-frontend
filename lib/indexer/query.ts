@@ -173,7 +173,7 @@ type ModifyMutation<T extends TableName> = {
 
 type Mutation<T extends TableName> = PutMutation<T> | ModifyMutation<T>
 
-type Mutations = Mutation<TableName>[]
+export type Mutations = Mutation<TableName>[]
 
 async function handleSchemaRegisteredEvent(event: Event, schemaCache: Record<string, Schema>): Promise<Mutations> {
   const args = event.decodedEvent.args as any;

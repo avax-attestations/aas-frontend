@@ -1,16 +1,18 @@
 import { useEffect } from "react";
 import { usePublicClient } from "wagmi";
-import { index } from "@/lib/indexer/persist";
+import { index, resume } from "@/lib/indexer/persist";
 import { useChain } from "./useChain";
 import { useDb } from "./useDb";
 import { EAS, type TransactionSigner } from "@ethereum-attestation-service/eas-sdk"
 import { useAddresses } from "./useAddresses";
 import { useProvider } from "./useProvider";
+import { useRouter } from "next/router";
 
 
-const POLL_INTERVAL = 1000;
+const POLL_INTERVAL = 30000;
 
 export function useIndexer() {
+  const router = useRouter();
   const client = usePublicClient();
   const chain = useChain();
   const db = useDb();
@@ -42,7 +44,10 @@ export function useIndexer() {
       })
     }
 
-    timeout = setTimeout(run, 2000);
+    timeout = setTimeout(() => {
+      timeout = null;
+      resume(chain, db, router.basePath).finally(run)
+    }, 1000)
 
     return () => {
       unmounted = true;
@@ -50,6 +55,6 @@ export function useIndexer() {
         clearTimeout(timeout);
       }
     }
-  }, [chain, db, client, easAddress, provider]);
+  }, [chain, db, client, easAddress, provider, router]);
 
 }

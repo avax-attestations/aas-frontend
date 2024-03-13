@@ -44,7 +44,7 @@ export interface Timestamp {
   txid: string
 }
 
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 class AASDexie extends Dexie {
 
