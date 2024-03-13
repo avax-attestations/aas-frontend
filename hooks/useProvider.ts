@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { usePublicClient } from "wagmi";
 
 
-function publicClientToProvider(publicClient: PublicClient) {
+export function publicClientToProvider(publicClient: PublicClient) {
   const { chain, transport } = publicClient;
   if (!chain) {
     return;

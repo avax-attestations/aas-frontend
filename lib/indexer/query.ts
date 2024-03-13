@@ -63,13 +63,13 @@ export async function computeMutations(
   chain: Chain,
   client: PublicClient,
   eas: EAS,
-  blockBatchSize: bigint,
   db: Database
 ): Promise<[true, bigint, Mutations] | [false] > {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
   const schemaRegistryAddress = DEPLOYMENT[chain].schemaRegistry.address;
   const easAbi = DEPLOYMENT[chain].eas.abi;
   const easAddress = DEPLOYMENT[chain].eas.address;
+  const blockBatchSize = DEPLOYMENT[chain].blockBatchSize;
 
 
   const schemaRegisteredEvent = getEventFromAbi(schemaRegistryAbi, "Registered");
@@ -161,12 +161,14 @@ type PutMutation<T extends TableName> = {
   operation: 'put'
   table: T
   data: EntityFromTableName<T>
+  blockNumber: number
 }
 
 type ModifyMutation<T extends TableName> = {
   operation: 'modify'
   table: T
   data: Partial<EntityFromTableName<T>>
+  blockNumber: number
 }
 
 type Mutation<T extends TableName> = PutMutation<T> | ModifyMutation<T>
@@ -190,7 +192,8 @@ async function handleSchemaRegisteredEvent(event: Event, schemaCache: Record<str
   return [{
     operation: 'put',
     table: 'schemas',
-    data: schema
+    data: schema,
+    blockNumber: Number(event.block.number)
   }]
 }
 
@@ -265,14 +268,16 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
       timeCreated,
       revocable: attestation.revocable,
       decodedDataJson
-    }
+    },
+    blockNumber: Number(event.block.number)
   }, {
     operation: 'modify',
     table: 'schemas',
     data: {
       uid: schema.uid,
       attestationCount: schema.attestationCount
-    }
+    },
+    blockNumber: Number(event.block.number)
   }] as Mutations
 
 
@@ -295,7 +300,8 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
         data: {
           uid,
           name
-        }
+        },
+        blockNumber: Number(event.block.number)
       })
     }
   }
@@ -333,7 +339,8 @@ async function handleTimestampedEvent(event: Event): Promise<Mutations> {
       timestamp: timeToNumber(timestamp),
       from: event.transaction.from,
       txid: event.transaction.hash
-    }
+    },
+    blockNumber: Number(event.block.number)
   }]
 }
 

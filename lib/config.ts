@@ -19,13 +19,11 @@ export const chains = process.env.NODE_ENV === 'production' ? prodChains : devCh
 
 export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!;
 
-// Fuji has a maximum batch size of 2048
-export const BLOCK_BATCH_SIZE = 2000n;
-
 type Hash = `0x${string}`
 
 export const DEPLOYMENT = {
   [avalancheFuji.name]: {
+    chain: avalancheFuji,
     schemaRegistry: {
       address: fujiSchemaRegistry.address as Hash,
       deploymentTxn: fujiSchemaRegistry.transactionHash as Hash,
@@ -35,9 +33,11 @@ export const DEPLOYMENT = {
       address: fujiEAS.address as Hash,
       deploymentTxn: fujiEAS.transactionHash as Hash,
       abi: fujiEAS.abi as Abi
-    }
+    },
+    blockBatchSize: 2000n
   },
   [hardhat.name]: {
+    chain: hardhat,
     schemaRegistry: {
       address: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as Hash,
       deploymentTxn: '0x0' as Hash,
@@ -47,7 +47,8 @@ export const DEPLOYMENT = {
       address: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as Hash,
       deploymentTxn: '0x0' as Hash,
       abi: fujiEAS.abi as Abi
-    }
+    },
+    blockBatchSize: 2000n
   },
 } as const;
 
