@@ -35,7 +35,7 @@ async function getEventsInBlockRangeRetry(
     } catch (err) {
       await sleep(1000)
       tries++
-      if (tries > 5) {
+      if (tries > 10) {
         console.error('failed to get events in block range', fromBlock, toBlock, err)
         throw err
       }

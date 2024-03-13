@@ -11,15 +11,17 @@ import { publicClientToProvider } from '@/hooks/useProvider';
 program
   .addOption(new Option('-c, --chain <chain>', 'Chain to index')
     .choices(Object.keys(DEPLOYMENT)).makeOptionMandatory(true))
-  .argument('<storage-dir>', 'Directory to indexing cache')
+  .argument('<db-dir>', 'Directory to store sqlite database')
+  .argument('<out-dir>', 'Directory to store indexing results')
 
 const parsed = program.parse(process.argv)
 const opts = parsed.opts()
 const args = parsed.args
 
-const storageDir = args[0]
+const dbDir = args[0]
+const outDir = args[1]
 
-const db = new sqlite3(`${storageDir}/index.db`, {
+const db = new sqlite3(`${dbDir}/${opts.chain.toLowerCase().replace(' ', '-')}.db`, {
   nativeBinding: './node_modules/better-sqlite3/build/Release/better_sqlite3.node'
 })
 db.exec(`
@@ -53,7 +55,7 @@ async function getNextBlock() {
   if (!row) {
     return 0
   }
-  return (row as any).value
+  return parseInt((row as any).value)
 }
 
 async function getSchema(uid: string) {
@@ -140,7 +142,7 @@ async function index() {
     const batchJson = JSON.stringify(batch)
     // compute sha256 hash of batchJson and write it to a file named after the hash
     const hash = crypto.createHash('sha256').update(batchJson).digest('hex')
-    const fname = `${storageDir}/${hash}.json`
+    const fname = `${outDir}/${hash}.json`
     console.log('writing', fname)
     fs.writeFileSync(fname, batchJson)
 
@@ -150,7 +152,7 @@ async function index() {
   }
 
   index[index.length - 1].max = Number(await getNextBlock()) - 1
-  const fname = `${storageDir}/index.json`
+  const fname = `${outDir}/index.json`
   console.log('writing', fname)
   fs.writeFileSync(fname, JSON.stringify(index))
 }
