@@ -103,7 +103,7 @@ export async function computeMutations(
 
   const toBlock = min(currentBlock + blockBatchSize, latestBlock);
   if (toBlock - currentBlock > 1n) {
-    console.log(`${new Date().toISOString()} - Fetching events from block ${currentBlock} to ${toBlock}`);
+    console.log(`${new Date().toISOString()} - ${chain} - Fetching events from block ${currentBlock} to ${toBlock}`);
   }
 
   // schemas

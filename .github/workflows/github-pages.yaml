@@ -61,8 +61,20 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build with Next.js
         run: pnpm next build
-      - name: Index Avalanche fuji
-        run: mkdir -pv ./out/indexing/avalanche-fuji && node scripts/esbuild.js && node ./indexer.js --chain "Avalanche Fuji" ./out/indexing/avalanche-fuji
+      - name: Run indexing jobs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pages_url=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.html_url')
+          echo "Github pages URL: $pages_url"
+          (
+          mkdir -pv ./out/indexing/avalanche-fuji
+          wget -O ./out/indexing/avalanche-fuji/index.db $pages_url/indexing/avalanche-fuji/index.db || echo "Failed to download index checkpoint"
+          node scripts/esbuild.js
+          node ./indexer.js --chain "Avalanche Fuji" ./out/indexing/avalanche-fuji
+          ) &
+          wait
+          echo "All indexing jobs are done"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
