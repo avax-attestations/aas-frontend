@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+import fs from 'fs'
 import { createPublicClient, http } from 'viem';
 import sqlite3 from 'better-sqlite3'
 import { program, Option } from 'commander'
@@ -15,7 +17,9 @@ const parsed = program.parse(process.argv)
 const opts = parsed.opts()
 const args = parsed.args
 
-const db = new sqlite3(`${args[0]}/index.db`, {
+const storageDir = args[0]
+
+const db = new sqlite3(`${storageDir}/index.db`, {
   nativeBinding: './node_modules/better-sqlite3/build/Release/better_sqlite3.node'
 })
 db.exec(`
@@ -114,6 +118,32 @@ async function index() {
       }
     })(currentBlock, mutations);
   }
+
+  // Fetch mutations from db in batches and write to stdout
+  let lastId = 0;
+  const index = []
+  while (true) {
+    const rows = queryMutations.all(lastId)
+    if (rows.length === 0) {
+      break
+    }
+    const batch = []
+    for (const row of rows) {
+      batch.push(JSON.parse((row as any).data))
+      lastId = (row as any).id
+    }
+    const batchJson = JSON.stringify(batch)
+    // compute sha256 hash of batchJson and write it to a file named after the hash
+    const hash = crypto.createHash('sha256').update(batchJson).digest('hex')
+    fs.writeFileSync(`${storageDir}/${hash}.json`, batchJson)
+
+    const min = Number((rows[0] as any).block)
+    const max = Number((rows[rows.length - 1] as any).block)
+    index.push({ min, max, hash })
+  }
+
+  index[index.length - 1].max = Number(await getLastBlock()) - 1
+  fs.writeFileSync(`${storageDir}/index.json`, JSON.stringify(index))
 }
 
 index().then(() => {
