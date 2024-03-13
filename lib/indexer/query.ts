@@ -1,8 +1,13 @@
 import type { TableName, Schema, EntityFromTableName } from '@/lib/db'
-import { PublicClient, decodeEventLog, zeroHash } from 'viem';
+import { PublicClient, decodeEventLog, getContract, zeroHash } from 'viem';
 import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Abi, AbiEvent } from 'abitype';
-import { type Attestation as EASAttestation, type EAS, SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
+import {
+  EAS,
+  SchemaEncoder,
+  type Attestation as EASAttestation,
+  TransactionSigner
+} from '@ethereum-attestation-service/eas-sdk';
 import { sleep } from '@/lib/utils';
 
 function min(a: bigint, b: bigint) {
@@ -84,14 +89,13 @@ export const schemaNameUID =
 export async function computeMutations(
   chain: Chain,
   client: PublicClient,
-  eas: EAS,
   db: Database
 ): Promise<[true, number, Mutations] | [false]> {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
   const schemaRegistryAddress = DEPLOYMENT[chain].schemaRegistry.address;
   const easAbi = DEPLOYMENT[chain].eas.abi;
   const easAddress = DEPLOYMENT[chain].eas.address;
-  const blockBatchSize = DEPLOYMENT[chain].blockBatchSize;
+  const blockBatchSize = DEPLOYMENT[chain].blockBatchSize - 1n;
 
 
   const schemaRegisteredEvent = getEventFromAbi(schemaRegistryAbi, "Registered");
@@ -157,13 +161,13 @@ export async function computeMutations(
   for (const event of allEvents) {
     switch (event.decodedEvent.eventName) {
       case 'Registered':
-        mutations.push(...(await handleSchemaRegisteredEvent(event, schemaCache)))
+        mutations.push(...(await handleSchemaRegisteredEvent(event, client, schemaCache)))
         break;
       case 'Attested':
-        mutations.push(...(await handleAttestedEvent(event, eas, db, schemaCache)))
+        mutations.push(...(await handleAttestedEvent(event, client, db, schemaCache)))
         break;
       case 'Revoked':
-        mutations.push(...(await handleRevokedEvent(event, eas)))
+        mutations.push(...(await handleRevokedEvent(event, client)))
         break;
       // case 'RevokedOffchain':
       //   mutations.push(...(await handleRevokedOffchainEvent(event)))
@@ -198,16 +202,47 @@ type Mutation<T extends TableName> = PutMutation<T> | ModifyMutation<T>
 
 export type Mutations = Mutation<TableName>[]
 
-async function handleSchemaRegisteredEvent(event: Event, schemaCache: Record<string, Schema>): Promise<Mutations> {
+type SchemaRecord = {
+  uid: string
+  resolver: string
+  revocable: boolean
+  schema: string
+}
+
+async function handleSchemaRegisteredEvent(event: Event, client: PublicClient, schemaCache: Record<string, Schema>): Promise<Mutations> {
+  if (!client.chain) {
+    throw new Error('invalid chain')
+  }
+  const chain = client.chain.name as Chain;
+
+  const schemaContract = getContract({
+    address: DEPLOYMENT[chain].schemaRegistry.address,
+    abi: DEPLOYMENT[chain].schemaRegistry.abi,
+    client
+  })
   const args = event.decodedEvent.args as any;
+
+  const schemaRecord = await (async () => {
+    let tries = 1;
+
+    while (true) {
+      const schemaRecord = await schemaContract.read.getSchema([args.uid]) as SchemaRecord
+      if (schemaRecord.uid !== zeroHash) {
+        return schemaRecord
+      }
+      console.log(`Delaying schema poll after try #${tries++}...`);
+      await sleep(500)
+    }
+  })()
+
   const schema = {
-    uid: args.uid as string,
-    schema: args.schema.schema as string,
+    uid: schemaRecord.uid,
+    schema: schemaRecord.schema,
     creator: event.transaction.from,
-    resolver: args.schema.resolver as string,
+    resolver: schemaRecord.resolver,
     time: timeToNumber(event.block.timestamp),
     txid: event.transaction.hash,
-    revocable: args.schema.revocable as boolean,
+    revocable: schemaRecord.revocable,
     name: '',
     attestationCount: 0
   }
@@ -229,21 +264,46 @@ interface Database {
   getNextBlock: () => Promise<number>
 }
 
-async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
+interface AttestationRecord {
+  uid: string
+  schema: string
+  time: bigint
+  expirationTime: bigint
+  revocationTime: bigint
+  refUID: string
+  recipient: string
+  attester: string
+  revocable: boolean
+  data: string
+}
+
+async function handleAttestedEvent(event: Event, client: PublicClient, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
+
+  if (!client.chain) {
+    throw new Error('invalid chain')
+  }
+  const chain = client.chain.name as Chain;
+
+  const eas = getContract({
+    address: DEPLOYMENT[chain].eas.address,
+    abi: DEPLOYMENT[chain].eas.abi,
+    client
+  })
   const args = event.decodedEvent.args as any
-  let attestation: EASAttestation
+  let attestation: AttestationRecord
+
 
   let tries = 1;
   while (true) {
-    const result = await eas.getAttestation(args.uid)
+    const result = await eas.read.getAttestation([args.uid]) as AttestationRecord
 
     if (result.uid !== zeroHash) {
       attestation = result;
       break;
     }
 
-    console.log(`Could not find attestation with uid "${args.uid}", retry #${tries} after 5 seconds...`)
-    await sleep(5000)
+    console.log(`Could not find attestation with uid "${args.uid}", retry #${tries} after 500 milliseconds...`)
+    await sleep(500)
     tries++
   }
 
@@ -332,10 +392,34 @@ async function handleAttestedEvent(event: Event, eas: EAS, db: Database, schemaC
   return result
 }
 
-async function handleRevokedEvent(event: Event, eas: EAS): Promise<Mutations> {
-  const args = event.decodedEvent.args as any
+async function handleRevokedEvent(event: Event, client: PublicClient): Promise<Mutations> {
+  if (!client.chain) {
+    throw new Error('invalid chain')
+  }
+  const chain = client.chain.name as Chain;
 
-  const attestation = await eas.getAttestation(args.uid)
+  const eas = getContract({
+    address: DEPLOYMENT[chain].eas.address,
+    abi: DEPLOYMENT[chain].eas.abi,
+    client
+  })
+  const args = event.decodedEvent.args as any
+  let attestation: AttestationRecord
+
+
+  let tries = 1;
+  while (true) {
+    const result = await eas.read.getAttestation([args.uid]) as AttestationRecord
+
+    if (result.uid !== zeroHash) {
+      attestation = result;
+      break;
+    }
+
+    console.log(`Could not find attestation with uid "${args.uid}", retry #${tries} after 500 milliseconds...`)
+    await sleep(500)
+    tries++
+  }
 
   const result = [{
     operation: 'modify',

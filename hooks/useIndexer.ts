@@ -3,8 +3,6 @@ import { usePublicClient } from "wagmi";
 import { index, resume } from "@/lib/indexer/persist";
 import { useChain } from "./useChain";
 import { useDb } from "./useDb";
-import { EAS, type TransactionSigner } from "@ethereum-attestation-service/eas-sdk"
-import { useAddresses } from "./useAddresses";
 import { useProvider } from "./useProvider";
 import { useRouter } from "next/router";
 
@@ -16,17 +14,12 @@ export function useIndexer() {
   const client = usePublicClient();
   const chain = useChain();
   const db = useDb();
-  const { easAddress } = useAddresses();
   const provider = useProvider();
 
   useEffect(() => {
     if (typeof window === 'undefined' || !client || !db || !provider) {
       return;
     }
-
-    const eas = new EAS(easAddress)
-    // This cast to TransactionSigner should be safe if we only want to do read operations.
-    eas.connect(provider as unknown as TransactionSigner)
     console.log('Indexing chain', chain)
 
     let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -39,7 +32,7 @@ export function useIndexer() {
         return;
       }
 
-      index(chain, client, eas, db).then(() => {
+      index(chain, client, db).then(() => {
         timeout = setTimeout(run, POLL_INTERVAL)
       })
     }
@@ -55,6 +48,5 @@ export function useIndexer() {
         clearTimeout(timeout);
       }
     }
-  }, [chain, db, client, easAddress, provider, router]);
-
+  }, [chain, db, client, provider, router]);
 }

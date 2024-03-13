@@ -1,15 +1,22 @@
-import { Chain as ViemChain, avalancheFuji, hardhat } from 'viem/chains';
+import { Chain as ViemChain, mainnet, arbitrum, avalancheFuji, hardhat } from 'viem/chains';
 import { Abi } from 'abitype';
+
+import mainnetSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/mainnet/SchemaRegistry.json'
+import mainnetEAS from '@ethereum-attestation-service/eas-contracts/deployments/mainnet/EAS.json'
+
+import arbitrumSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/SchemaRegistry.json'
+import arbitrumEAS from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/EAS.json'
 
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
-
 
 const devChains: [ViemChain, ...ViemChain[]] = [
   hardhat
 ]
 
 const prodChains: [ViemChain, ...ViemChain[]] = [
+  mainnet,
+  arbitrum,
   avalancheFuji
 ]
 
@@ -22,6 +29,34 @@ export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PR
 type Hash = `0x${string}`
 
 export const DEPLOYMENT = {
+  [mainnet.name]: {
+    chain: mainnet,
+    schemaRegistry: {
+      address: mainnetSchemaRegistry.address as Hash,
+      deploymentTxn: mainnetSchemaRegistry.transactionHash as Hash,
+      abi: mainnetSchemaRegistry.abi as Abi
+    },
+    eas: {
+      address: mainnetEAS.address as Hash,
+      deploymentTxn: mainnetEAS.transactionHash as Hash,
+      abi: mainnetEAS.abi as Abi
+    },
+    blockBatchSize: 8000n
+  },
+  [arbitrum.name]: {
+    chain: arbitrum,
+    schemaRegistry: {
+      address: arbitrumSchemaRegistry.address as Hash,
+      deploymentTxn: arbitrumSchemaRegistry.transactionHash as Hash,
+      abi: arbitrumSchemaRegistry.abi as Abi
+    },
+    eas: {
+      address: arbitrumEAS.address as Hash,
+      deploymentTxn: arbitrumEAS.transactionHash as Hash,
+      abi: arbitrumEAS.abi as Abi
+    },
+    blockBatchSize: 100000n
+  },
   [avalancheFuji.name]: {
     chain: avalancheFuji,
     schemaRegistry: {
@@ -34,7 +69,7 @@ export const DEPLOYMENT = {
       deploymentTxn: fujiEAS.transactionHash as Hash,
       abi: fujiEAS.abi as Abi
     },
-    blockBatchSize: 2000n
+    blockBatchSize: 2048n
   },
   [hardhat.name]: {
     chain: hardhat,

@@ -2,12 +2,16 @@ import { type Chain } from '@/lib/config';
 import { Mutations, computeMutations } from '@/lib/indexer/query';
 import { Database } from '@/lib/db';
 import { type PublicClient } from 'viem';
-import { type EAS } from '@ethereum-attestation-service/eas-sdk';
+import { type SchemaRegistry, type EAS } from '@ethereum-attestation-service/eas-sdk';
 
 
-export async function index(chain: Chain, client: PublicClient, eas: EAS, db: Database) {
+export async function index(
+  chain: Chain,
+  client: PublicClient,
+  db: Database
+) {
   while (true) {
-    const [fetched, nextBlock, mutations] = await computeMutations(chain, client, eas, {
+    const [fetched, nextBlock, mutations] = await computeMutations(chain, client, {
       getSchema: async (uid) => {
         const items = await db.schemas.where('uid').equals(uid).toArray()
         if (items.length !== 1) {

@@ -3,10 +3,8 @@ import fs from 'fs'
 import { createPublicClient, http } from 'viem';
 import sqlite3 from 'better-sqlite3'
 import { program, Option } from 'commander'
-import { EAS, type TransactionSigner } from "@ethereum-attestation-service/eas-sdk"
 import { DEPLOYMENT } from "@/lib/config";
 import { computeMutations } from '@/lib/indexer/query';
-import { publicClientToProvider } from '@/hooks/useProvider';
 
 program
   .addOption(new Option('-c, --chain <chain>', 'Chain to index')
@@ -108,12 +106,8 @@ async function index() {
     transport: http()
   })
 
-  const provider = publicClientToProvider(client) as unknown as TransactionSigner;
-  const eas = new EAS(deployment.eas.address)
-  eas.connect(provider)
-
   while (true) {
-    const [fetched, nextBlock, mutations] = await computeMutations(chainName, client, eas, {
+    const [fetched, nextBlock, mutations] = await computeMutations(chainName, client, {
       getSchema,
       getNextBlock
     })
