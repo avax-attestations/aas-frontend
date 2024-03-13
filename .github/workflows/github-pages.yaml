@@ -61,6 +61,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build with Next.js
         run: pnpm next build
+      - name: Index Avalanche fuji
+        run: mkdir -pv ./out/indexing/avalanche-fuji && node scripts/esbuild.js && node ./indexer.js --chain "Avalanche Fuji" ./out/indexing/avalanche-fuji
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
