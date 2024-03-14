@@ -15,7 +15,7 @@ const devChains: [ViemChain, ...ViemChain[]] = [
 ]
 
 const prodChains: [ViemChain, ...ViemChain[]] = [
-  // mainnet,
+  mainnet,
   // arbitrum,
   avalancheFuji
 ]
