@@ -15,7 +15,7 @@ export async function index(
       getSchema: async (uid) => {
         const items = await db.schemas.where('uid').equals(uid).toArray()
         if (items.length !== 1) {
-          throw new Error(`Cannot find schema with uid ${uid}`)
+          return null
         }
         return items[0]
       },

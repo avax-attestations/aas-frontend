@@ -88,7 +88,7 @@ async function getNextBlock() {
 async function getSchema(uid: string) {
   const row = getSchemaStmt.get(uid)
   if (!row) {
-    throw new Error(`Cannot find schema with uid ${uid}`)
+    return null
   }
   return JSON.parse((row as any).data)
 }

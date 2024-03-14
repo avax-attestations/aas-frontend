@@ -260,7 +260,7 @@ function timeToNumber(timestamp: bigint) {
 }
 
 interface Database {
-  getSchema: (uid: string) => Promise<Schema>
+  getSchema: (uid: string) => Promise<Schema | null>
   getNextBlock: () => Promise<number>
 }
 
@@ -315,6 +315,10 @@ async function handleAttestedEvent(event: Event, client: PublicClient, db: Datab
     }
     return db.getSchema(attestation.schema)
   })()
+  if (!schema) {
+    // attestation withou a matching schema, ignore
+    return []
+  }
   schema.attestationCount++;
 
   let decodedData: any = null
@@ -376,7 +380,7 @@ async function handleAttestedEvent(event: Event, client: PublicClient, db: Datab
       return db.getSchema(uid)
     })()
 
-    if (schemaBeingNamed.creator.toLowerCase() === attestation.attester.toLowerCase()) {
+    if (schemaBeingNamed?.creator.toLowerCase() === attestation.attester.toLowerCase()) {
       result.push({
         operation: 'modify',
         table: 'schemas',
