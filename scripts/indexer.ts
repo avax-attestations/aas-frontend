@@ -5,6 +5,7 @@ import sqlite3 from 'better-sqlite3'
 import { program, Option } from 'commander'
 import { DEPLOYMENT } from "@/lib/config";
 import { computeMutations } from '@/lib/indexer/query';
+import { sleep } from '@/lib/utils';
 
 program
   .addOption(new Option('-c, --chain <chain>', 'Chain to index')
@@ -107,6 +108,7 @@ async function index() {
   })
 
   while (true) {
+    await sleep(5000)
     const [fetched, nextBlock, mutations] = await computeMutations(chainName, client, {
       getSchema,
       getNextBlock
