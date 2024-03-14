@@ -7,7 +7,7 @@ import { useProvider } from "./useProvider";
 import { useRouter } from "next/router";
 
 
-const POLL_INTERVAL = 30000;
+const POLL_INTERVAL = 60000;
 
 export function useIndexer() {
   const router = useRouter();
