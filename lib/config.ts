@@ -15,8 +15,8 @@ const devChains: [ViemChain, ...ViemChain[]] = [
 ]
 
 const prodChains: [ViemChain, ...ViemChain[]] = [
-  mainnet,
-  arbitrum,
+  // mainnet,
+  // arbitrum,
   avalancheFuji
 ]
 
@@ -29,34 +29,34 @@ export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PR
 type Hash = `0x${string}`
 
 export const DEPLOYMENT = {
-  [mainnet.name]: {
-    chain: mainnet,
-    schemaRegistry: {
-      address: mainnetSchemaRegistry.address as Hash,
-      deploymentTxn: mainnetSchemaRegistry.transactionHash as Hash,
-      abi: mainnetSchemaRegistry.abi as Abi
-    },
-    eas: {
-      address: mainnetEAS.address as Hash,
-      deploymentTxn: mainnetEAS.transactionHash as Hash,
-      abi: mainnetEAS.abi as Abi
-    },
-    blockBatchSize: 512n
-  },
-  [arbitrum.name]: {
-    chain: arbitrum,
-    schemaRegistry: {
-      address: arbitrumSchemaRegistry.address as Hash,
-      deploymentTxn: arbitrumSchemaRegistry.transactionHash as Hash,
-      abi: arbitrumSchemaRegistry.abi as Abi
-    },
-    eas: {
-      address: arbitrumEAS.address as Hash,
-      deploymentTxn: arbitrumEAS.transactionHash as Hash,
-      abi: arbitrumEAS.abi as Abi
-    },
-    blockBatchSize: 100000n
-  },
+  // [mainnet.name]: {
+  //   chain: mainnet,
+  //   schemaRegistry: {
+  //     address: mainnetSchemaRegistry.address as Hash,
+  //     deploymentTxn: mainnetSchemaRegistry.transactionHash as Hash,
+  //     abi: mainnetSchemaRegistry.abi as Abi
+  //   },
+  //   eas: {
+  //     address: mainnetEAS.address as Hash,
+  //     deploymentTxn: mainnetEAS.transactionHash as Hash,
+  //     abi: mainnetEAS.abi as Abi
+  //   },
+  //   blockBatchSize: 128n
+  // },
+  // [arbitrum.name]: {
+  //   chain: arbitrum,
+  //   schemaRegistry: {
+  //     address: arbitrumSchemaRegistry.address as Hash,
+  //     deploymentTxn: arbitrumSchemaRegistry.transactionHash as Hash,
+  //     abi: arbitrumSchemaRegistry.abi as Abi
+  //   },
+  //   eas: {
+  //     address: arbitrumEAS.address as Hash,
+  //     deploymentTxn: arbitrumEAS.transactionHash as Hash,
+  //     abi: arbitrumEAS.abi as Abi
+  //   },
+  //   blockBatchSize: 100000n
+  // },
   [avalancheFuji.name]: {
     chain: avalancheFuji,
     schemaRegistry: {
