@@ -109,7 +109,7 @@ async function index() {
 
   while (true) {
     if (chainName === 'Ethereum') {
-      await sleep(2000)
+      await sleep(1000)
     }
     const [fetched, nextBlock, mutations] = await computeMutations(chainName, client, {
       getSchema,
