@@ -32,7 +32,7 @@ export async function index(
       break
     }
 
-    await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
+    await db.transaction('rw', db.properties, db.schemas, db.attestations, db.timestamps, async () => {
       await persist(db, mutations, nextBlock)
       await db.properties.put({ key: 'nextBlock', value: nextBlock });
     })
@@ -68,7 +68,7 @@ async function processCheckpoint(db: Database, checkpoint: any, baseURL: string,
     return
   }
   const data = await response.json()
-  await db.transaction('rw', db.properties, db.schemas, db.attestations, async () => {
+  await db.transaction('rw', db.properties, db.schemas, db.attestations, db.timestamps, async () => {
     await persist(db, data, nextBlock)
     console.log('Updating latest block to', checkpoint.max)
     console.log('Updating checkpoint to', checkpoint.hash)
