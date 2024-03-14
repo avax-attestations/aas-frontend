@@ -70,12 +70,12 @@ jobs:
         run: |
           pages_url=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.html_url')
           echo "Github pages URL: $pages_url"
-          # (
-          # mkdir -pv ./out/indexing/ethereum
-          # wget -O ./out/indexing/ethereum/index.db ${pages_url}/indexing/ethereum/index.db || echo "Failed to download index checkpoint"
-          # node scripts/esbuild.js
-          # node ./indexer.js --chain "Ethereum" ./out/indexing/ethereum
-          # ) &
+          (
+          mkdir -pv ./out/indexing/ethereum
+          wget -O ./out/indexing/ethereum/index.db ${pages_url}/indexing/ethereum/index.db || echo "Failed to download index checkpoint"
+          node scripts/esbuild.js
+          node ./indexer.js --chain "Ethereum" ./out/indexing/ethereum
+          ) &
           # (
           # mkdir -pv ./out/indexing/arbitrum-one
           # wget -O ./out/indexing/arbitrum-one/index.db ${pages_url}/indexing/arbitrum-one/index.db || echo "Failed to download index checkpoint"
