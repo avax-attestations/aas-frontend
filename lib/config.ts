@@ -41,7 +41,7 @@ export const DEPLOYMENT = {
       deploymentTxn: mainnetEAS.transactionHash as Hash,
       abi: mainnetEAS.abi as Abi
     },
-    blockBatchSize: 800n
+    blockBatchSize: 512n
   },
   [arbitrum.name]: {
     chain: arbitrum,
