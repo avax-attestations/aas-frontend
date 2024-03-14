@@ -432,7 +432,8 @@ async function handleRevokedEvent(event: Event, client: PublicClient): Promise<M
       uid: attestation.uid,
       revoked: true,
       revocationTime: timeToNumber(attestation.revocationTime)
-    }
+    },
+    blockNumber: Number(event.block.number)
   }] as Mutations;
 
   return result

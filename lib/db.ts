@@ -38,13 +38,14 @@ export interface Attestation {
 }
 
 export interface Timestamp {
+  id?: number
   uid: string
   timestamp: number
   from: string
   txid: string
 }
 
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 class AASDexie extends Dexie {
 
@@ -60,7 +61,7 @@ class AASDexie extends Dexie {
       properties: '&key',
       schemas: '++id, &uid, schema, resolver, creator, time, name',
       attestations: '++id, &uid, schemaId, attester, recipient, time',
-      timestamps: '++id, &uid, timestamp, from',
+      timestamps: '++id, uid',
     });
   }
 
