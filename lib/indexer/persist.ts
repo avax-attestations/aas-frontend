@@ -2,7 +2,6 @@ import { type Chain } from '@/lib/config';
 import { Mutations, computeMutations } from '@/lib/indexer/query';
 import { Database } from '@/lib/db';
 import { type PublicClient } from 'viem';
-import { type SchemaRegistry, type EAS } from '@ethereum-attestation-service/eas-sdk';
 
 
 export async function index(
@@ -32,8 +31,9 @@ export async function index(
       break
     }
 
+    const currentBlock = (await db.properties.get('nextBlock'))?.value ?? 0
     await db.transaction('rw', db.properties, db.schemas, db.attestations, db.timestamps, async () => {
-      await persist(db, mutations, nextBlock)
+      await persist(db, mutations, currentBlock)
       await db.properties.put({ key: 'nextBlock', value: nextBlock });
     })
   }
@@ -82,7 +82,8 @@ export async function persist(db: Database, mutations: Mutations, nextBlock: num
     console.log(`Processing ${mutations.length} mutations`)
   }
   for (const mut of mutations) {
-    if (mut.blockNumber >= nextBlock) {
+    if (mut.blockNumber < nextBlock) {
+      // ignore mutations from blocks that have already been processed
       continue
     }
     const op = mut.operation
