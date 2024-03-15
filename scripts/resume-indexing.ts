@@ -73,4 +73,7 @@ async function run() {
 
 run().then(() => {
   console.log('Done indexing all chains')
-}).catch(console.error)
+}).catch((err) => {
+  console.error('Failed to index', err)
+  process.exit(1)
+})
