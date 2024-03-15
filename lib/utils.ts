@@ -48,3 +48,7 @@ export function timeAgo(timestampInSeconds: number): string {
     return pluralize('day', diffDays);
   }
 }
+
+export function normalizeChainName(chain: string): string {
+  return chain.toLowerCase().replace(' ', '-').replace(/\/$/, '');
+}

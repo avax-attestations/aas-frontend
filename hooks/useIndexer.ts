@@ -39,7 +39,8 @@ export function useIndexer() {
 
     timeout = setTimeout(() => {
       timeout = null;
-      resume(chain, db, router.basePath).finally(run)
+      const basePath = router.basePath !== '/' ? router.basePath : '';
+      resume(chain, db, basePath).finally(run)
     }, 1000)
 
     return () => {

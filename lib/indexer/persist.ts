@@ -2,6 +2,7 @@ import { type Chain } from '@/lib/config';
 import { Mutations, computeMutations } from '@/lib/indexer/query';
 import { Database } from '@/lib/db';
 import { type PublicClient } from 'viem';
+import { normalizeChainName } from '@/lib/utils';
 
 
 export async function index(
@@ -40,7 +41,7 @@ export async function index(
 }
 
 function getIndexingURL(chain: Chain, basePath: string) {
-  return `${basePath}/indexing/${chain.toLowerCase().replace(' ', '-').replace(/\/$/, '')}`
+  return `${basePath}/indexing/${normalizeChainName(chain)}`
 }
 
 export async function resume(chain: Chain, db: Database, basePath: string) {

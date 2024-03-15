@@ -184,9 +184,9 @@ async function index() {
 }
 
 index().then(() => {
-  console.log('Indexing finished')
+  console.log(`Indexing "${opts.chain}" finished`)
   process.exit(0)
 }).catch((err) => {
-  console.error('Indexing failed', err)
+  console.error(`Indexing "${opts.chain}" failed`, err)
   process.exit(1)
 });
