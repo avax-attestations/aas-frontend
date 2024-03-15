@@ -32,7 +32,7 @@ export function useIndexer() {
         return;
       }
 
-      index(chain, client, db).then(() => {
+      index(chain, client, db).finally(() => {
         timeout = setTimeout(run, POLL_INTERVAL)
       })
     }

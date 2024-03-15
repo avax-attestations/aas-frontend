@@ -82,7 +82,7 @@ export async function persist(db: Database, mutations: Mutations, nextBlock: num
     console.log(`Processing ${mutations.length} mutations`)
   }
   for (const mut of mutations) {
-    if (mut.blockNumber < nextBlock) {
+    if (mut.blockNumber >= nextBlock) {
       continue
     }
     const op = mut.operation
