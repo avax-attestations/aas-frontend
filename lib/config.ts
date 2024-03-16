@@ -92,7 +92,7 @@ export const DEPLOYMENT = {
       }
       return http(`https://eth-sepolia.g.alchemy.com/v2/${apiKey}`, {
         batch: {
-          wait: 0
+          wait: 500
         }
       })
     }
