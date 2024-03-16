@@ -69,18 +69,6 @@ export const DEPLOYMENT = {
           wait: 0
         }
       })
-      // const apiKey = process.env.ARBITRUM_MORALIS_API_KEY;
-      // if (!apiKey) {
-      //   return http()
-      // }
-      //
-      // return http('https://deep-index.moralis.io/api/v2.2', {
-      //   fetchOptions: {
-      //     headers: {
-      //       'X-API-Key': apiKey
-      //     }
-      //   }
-      // })
     }
   },
   [sepolia.name]: {
