@@ -63,27 +63,20 @@ async function runChain(chain: Chain) {
     stdio: 'inherit'
   })
 
-  const timeoutSeconds = 10 * 60
-  let timer: ReturnType<typeof setTimeout> | null = null
-  const timeoutPromise = new Promise<void>((resolve) => {
-    timer = setTimeout(() => {
-      console.log(`Killing indexing process for "${chain}" after ${timeoutSeconds} seconds`)
-      indexingProcess.kill()
-      resolve()
-    }, 1000 * timeoutSeconds)  // cancel after 10 minutes
-  })
+  const timeoutSeconds = 15 * 60
+  setTimeout(() => {
+    console.log(`Killing indexing process for "${chain}" after ${timeoutSeconds} seconds`)
+    indexingProcess.kill('SIGUSR1')
+  }, timeoutSeconds * 1000)
 
   // Since we have already downloaded the previous checkout,
   // we don't care if the indexing job fails, just wait for it to finish.
   // Failures are common since RPC endpoints might rate limit our IP.
   const exitPromise = new Promise((resolve) => {
-    if (timer) {
-      clearTimeout(timer)
-    }
     indexingProcess.on('exit', resolve)
   })
 
-  await Promise.race([timeoutPromise, exitPromise])
+  return exitPromise
 }
 
 async function run() {

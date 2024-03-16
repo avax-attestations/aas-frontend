@@ -102,6 +102,12 @@ async function index() {
     return [value, opts.chain as keyof typeof DEPLOYMENT]
   })();
 
+
+  process.on('SIGUSR1', () => {
+    console.log(`${new Date().toISOString()} - ${deployment.chain.name} - Received SIGUSR1, exiting`)
+    process.exit(1)
+  })
+
   const client = createPublicClient({
     chain: deployment.chain,
     transport: deployment.transportFactory(),
