@@ -66,7 +66,7 @@ export const DEPLOYMENT = {
     transportFactory: () => {
       return http(undefined, {
         batch: {
-          wait: 0
+          wait: 500
         }
       })
     }
@@ -83,14 +83,18 @@ export const DEPLOYMENT = {
       deploymentTxn: sepoliaEAS.transactionHash as Hash,
       abi: sepoliaEAS.abi as Abi
     },
-    blockBatchSize: 10n,
+    blockBatchSize: 1000n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       const apiKey = process.env.SEPOLIA_ALCHEMY_API_KEY;
       if (!apiKey) {
         return http()
       }
-      return http(`https://eth-sepolia.g.alchemy.com/v2/${apiKey}`)
+      return http(`https://eth-sepolia.g.alchemy.com/v2/${apiKey}`, {
+        batch: {
+          wait: 1000
+        }
+      })
     }
 
   },
