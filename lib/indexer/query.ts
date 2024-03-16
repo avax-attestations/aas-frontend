@@ -175,6 +175,8 @@ export async function computeMutations(
     }
   }
 
+  console.log(`${new Date().toISOString()} - ${chain} - Created ${mutations.length} mutations between ${currentBlock} and ${toBlock}`);
+
   return [true, Number(currentBlock), mutations]
 }
 
