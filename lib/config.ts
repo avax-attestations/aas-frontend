@@ -87,7 +87,6 @@ export const DEPLOYMENT = {
     blockBatchSize: 2500n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
-      // return http()
       return http('https://rpc-sepolia.rockx.com/', {
         batch: {
           wait: 0

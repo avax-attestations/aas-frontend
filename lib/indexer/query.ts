@@ -146,7 +146,7 @@ export async function computeMutations(
   )
 
   const allEvents = decodedSchemaRegistryEvents.concat(decodedEasEvents)
-  console.log(`${new Date().toISOString()} - ${chain} - Fetched ${allEvents.length} events between blocks ${currentBlock} and ${toBlock}`);
+  console.log(`${new Date().toISOString()} - ${chain} - Fetched ${allEvents.length} events between blocks ${fromBlock} and ${toBlock}`);
 
   currentBlock = toBlock + 1n;
 
@@ -175,7 +175,7 @@ export async function computeMutations(
     }
   }
 
-  console.log(`${new Date().toISOString()} - ${chain} - Created ${mutations.length} mutations between ${currentBlock} and ${toBlock}`);
+  console.log(`${new Date().toISOString()} - ${chain} - Created ${mutations.length} mutations between ${fromBlock} and ${toBlock}`);
 
   return [true, Number(currentBlock), mutations]
 }
