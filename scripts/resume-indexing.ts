@@ -63,14 +63,14 @@ async function runChain(chain: Chain) {
     stdio: 'inherit'
   })
 
-  const timeoutSeconds = 60 * 60
+  const timeoutSeconds = 15 * 60
   let timer: ReturnType<typeof setTimeout> | null = null
   const timeoutPromise = new Promise<void>((resolve) => {
     timer = setTimeout(() => {
       console.log(`Killing indexing process for "${chain}" after ${timeoutSeconds} seconds`)
       indexingProcess.kill()
       resolve()
-    }, 1000 * timeoutSeconds)  // cancel after 2 hours
+    }, 1000 * timeoutSeconds)  // cancel after 15 minutes
   })
 
   // Since we have already downloaded the previous checkout,
