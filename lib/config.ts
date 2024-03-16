@@ -83,7 +83,7 @@ export const DEPLOYMENT = {
       deploymentTxn: sepoliaEAS.transactionHash as Hash,
       abi: sepoliaEAS.abi as Abi
     },
-    blockBatchSize: 10n,
+    blockBatchSize: 2n,
     delayBetweenRPCRequests: 1000,
     transportFactory: () => {
       const apiKey = process.env.SEPOLIA_ALCHEMY_API_KEY;
