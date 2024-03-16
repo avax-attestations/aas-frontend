@@ -37,7 +37,7 @@ async function runChain(chain: Chain) {
     fs.mkdirSync(outDir, { recursive: true })
   }
 
-  const baseURL = `${opts.baseUrl.replace('/$','')}/indexing/${normalizeChainName(chain)}`
+  const baseURL = `${opts.baseUrl.replace('/$', '')}/indexing/${normalizeChainName(chain)}`
 
   await fetchFile(baseURL, 'index.db', outDir)
   await fetchFile(baseURL, 'index.json', outDir)
@@ -59,8 +59,9 @@ async function runChain(chain: Chain) {
   })
 
   const timeoutSeconds = 60 * 60
+  let timer: ReturnType<typeof setTimeout> | null = null
   const timeoutPromise = new Promise<void>((resolve) => {
-    setTimeout(() => {
+    timer = setTimeout(() => {
       console.log(`Killing indexing process for "${chain}" after ${timeoutSeconds} seconds`)
       indexingProcess.kill()
       resolve()
@@ -71,6 +72,9 @@ async function runChain(chain: Chain) {
   // we don't care if the indexing job fails, just wait for it to finish.
   // Failures are common since RPC endpoints might rate limit our IP.
   const exitPromise = new Promise((resolve) => {
+    if (timer) {
+      clearTimeout(timer)
+    }
     indexingProcess.on('exit', resolve)
   })
 

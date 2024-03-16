@@ -56,7 +56,7 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 100000n,
+    blockBatchSize: 10000n,
     delayBetweenRPCRequests: 2000
   },
   [avalancheFuji.name]: {
