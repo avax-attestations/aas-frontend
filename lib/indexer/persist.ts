@@ -1,8 +1,8 @@
-import { type Chain } from '@/lib/config';
+import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Mutations, computeMutations } from '@/lib/indexer/query';
 import { Database } from '@/lib/db';
 import { type PublicClient } from 'viem';
-import { normalizeChainName } from '@/lib/utils';
+import { normalizeChainName, sleep } from '@/lib/utils';
 
 
 export async function index(
@@ -10,6 +10,8 @@ export async function index(
   client: PublicClient,
   db: Database
 ) {
+  const delay = DEPLOYMENT[chain].delayBetweenRPCRequests
+
   while (true) {
     const [fetched, nextBlock, mutations] = await computeMutations(
       chain, client, (await db.properties.get('nextBlock'))?.value ?? 0, {
@@ -31,6 +33,10 @@ export async function index(
       await persist(db, mutations, currentBlock)
       await db.properties.put({ key: 'nextBlock', value: nextBlock });
     })
+
+    if (delay) {
+      await sleep(delay)
+    }
   }
 }
 

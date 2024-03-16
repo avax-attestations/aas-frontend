@@ -41,7 +41,14 @@ async function runChain(chain: Chain) {
 
   await fetchFile(baseURL, 'index.db', outDir)
   await fetchFile(baseURL, 'index.json', outDir)
-  const indexJson = JSON.parse(fs.readFileSync(`${outDir}/index.json`, 'utf-8'))
+  const indexJson = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(`${outDir}/index.json`, 'utf-8'))
+    } catch (e) {
+      console.error(`Failed to parse index.json for "${chain}"`, e)
+      return []
+    }
+  })()
 
   for (const checkpoint of indexJson) {
     await fetchFile(baseURL, `${checkpoint.hash}.json`, outDir)

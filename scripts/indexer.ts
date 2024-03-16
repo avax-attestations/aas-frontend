@@ -110,9 +110,6 @@ async function index() {
   const delay = DEPLOYMENT[chainName].delayBetweenRPCRequests
 
   while (true) {
-    if (delay) {
-      await sleep(delay)
-    }
     const [fetched, nextBlock, mutations] = await computeMutations(
       chainName, client, (await getNextBlock()), {
       getSchema,
@@ -147,6 +144,10 @@ async function index() {
         updateSchemaStmt.run(mut.data.uid, JSON.stringify(modified))
       }
     })(nextBlock, mutations);
+
+    if (delay) {
+      await sleep(delay)
+    }
   }
 
   // Fetch mutations from db in batches and write to stdout
