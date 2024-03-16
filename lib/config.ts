@@ -58,7 +58,7 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 2500n,
+    blockBatchSize: 25000n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
