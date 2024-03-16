@@ -61,7 +61,7 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 25000n,
+    blockBatchSize: 2500n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
@@ -83,7 +83,7 @@ export const DEPLOYMENT = {
       deploymentTxn: sepoliaEAS.transactionHash as Hash,
       abi: sepoliaEAS.abi as Abi
     },
-    blockBatchSize: 5n,
+    blockBatchSize: 2n,
     delayBetweenRPCRequests: 1000,
     transportFactory: () => {
       const apiKey = process.env.SEPOLIA_ALCHEMY_API_KEY;
