@@ -20,7 +20,8 @@ const devChains: [ViemChain, ...ViemChain[]] = [
 
 const prodChains: [ViemChain, ...ViemChain[]] = [
   mainnet,
-  // arbitrum,
+  arbitrum,
+  sepolia,
   avalancheFuji
 ]
 
@@ -45,7 +46,7 @@ export const DEPLOYMENT = {
       deploymentTxn: mainnetEAS.transactionHash as Hash,
       abi: mainnetEAS.abi as Abi
     },
-    blockBatchSize: 800n,
+    blockBatchSize: 400n,
     delayBetweenRPCRequests: 1000,
     transportFactory: () => http()
   },
@@ -86,11 +87,12 @@ export const DEPLOYMENT = {
     blockBatchSize: 2500n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
-      return http('https://rpc-sepolia.rockx.com/', {
-        batch: {
-          wait: 0
-        }
-      })
+      return http()
+      // return http('https://rpc-sepolia.rockx.com/', {
+      //   batch: {
+      //     wait: 0
+      //   }
+      // })
     }
 
   },
@@ -106,7 +108,7 @@ export const DEPLOYMENT = {
       deploymentTxn: fujiEAS.transactionHash as Hash,
       abi: fujiEAS.abi as Abi
     },
-    blockBatchSize: 2048n,
+    blockBatchSize: 1024n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => http()
   },
