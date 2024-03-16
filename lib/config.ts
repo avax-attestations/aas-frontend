@@ -61,7 +61,7 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 25000n,
+    blockBatchSize: 2500n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
@@ -83,7 +83,7 @@ export const DEPLOYMENT = {
       deploymentTxn: sepoliaEAS.transactionHash as Hash,
       abi: sepoliaEAS.abi as Abi
     },
-    blockBatchSize: 12750n,
+    blockBatchSize: 2500n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http('https://rpc-sepolia.rockx.com/', {
