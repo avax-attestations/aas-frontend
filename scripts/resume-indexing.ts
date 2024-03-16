@@ -9,6 +9,7 @@ import { DEPLOYMENT, type Chain } from "@/lib/config";
 import { normalizeChainName as normalizeChainName } from '@/lib/utils';
 
 program
+  .option('--allow-start-from-scratch', 'If set, it is possible to start from scratch (i.e. without index.db)')
   .requiredOption('-b, --base-url <base-url>', 'Base URL to fetch indexing checkpoints')
 
 const parsed = program.parse(process.argv)
@@ -40,6 +41,10 @@ async function runChain(chain: Chain) {
   const baseURL = `${opts.baseUrl.replace('/$', '')}/indexing/${normalizeChainName(chain)}`
 
   await fetchFile(baseURL, 'index.db', outDir)
+  if (!fs.existsSync(`${outDir}/index.db`) && !opts.allowStartFromScratch) {
+    throw new Error('Failed to download index.db (if starting from scratch, pass --allow-start-from-scratch)')
+  }
+
   await fetchFile(baseURL, 'index.json', outDir)
   const indexJson = (() => {
     try {
