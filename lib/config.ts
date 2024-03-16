@@ -58,8 +58,8 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 500n,
-    delayBetweenRPCRequests: 0,
+    blockBatchSize: 100n,
+    delayBetweenRPCRequests: 100,
     transportFactory: () => {
       return http()
       // const apiKey = process.env.ARBITRUM_MORALIS_API_KEY;
