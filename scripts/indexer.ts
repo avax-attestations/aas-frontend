@@ -104,7 +104,7 @@ async function index() {
 
   const client = createPublicClient({
     chain: deployment.chain,
-    transport: http()
+    transport: deployment.transportFactory(),
   })
 
   const delay = DEPLOYMENT[chainName].delayBetweenRPCRequests

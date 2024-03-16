@@ -1,4 +1,5 @@
 import { Chain as ViemChain, mainnet, arbitrum, avalancheFuji, hardhat } from 'viem/chains';
+import { http } from 'viem';
 import { Abi } from 'abitype';
 
 import mainnetSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/mainnet/SchemaRegistry.json'
@@ -16,7 +17,7 @@ const devChains: [ViemChain, ...ViemChain[]] = [
 
 const prodChains: [ViemChain, ...ViemChain[]] = [
   mainnet,
-  arbitrum,
+  // arbitrum,
   avalancheFuji
 ]
 
@@ -42,7 +43,8 @@ export const DEPLOYMENT = {
       abi: mainnetEAS.abi as Abi
     },
     blockBatchSize: 800n,
-    delayBetweenRPCRequests: 1000
+    delayBetweenRPCRequests: 1000,
+    transportFactory: () => http()
   },
   [arbitrum.name]: {
     chain: arbitrum,
@@ -56,8 +58,23 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 100000n,
-    delayBetweenRPCRequests: 10000
+    blockBatchSize: 500n,
+    delayBetweenRPCRequests: 0,
+    transportFactory: () => {
+      return http()
+      // const apiKey = process.env.ARBITRUM_MORALIS_API_KEY;
+      // if (!apiKey) {
+      //   return http()
+      // }
+      //
+      // return http('https://deep-index.moralis.io/api/v2.2', {
+      //   fetchOptions: {
+      //     headers: {
+      //       'X-API-Key': apiKey
+      //     }
+      //   }
+      // })
+    }
   },
   [avalancheFuji.name]: {
     chain: avalancheFuji,
@@ -72,7 +89,8 @@ export const DEPLOYMENT = {
       abi: fujiEAS.abi as Abi
     },
     blockBatchSize: 2048n,
-    delayBetweenRPCRequests: 0
+    delayBetweenRPCRequests: 0,
+    transportFactory: () => http()
   },
   [hardhat.name]: {
     chain: hardhat,
@@ -87,7 +105,8 @@ export const DEPLOYMENT = {
       abi: fujiEAS.abi as Abi
     },
     blockBatchSize: 2000n,
-    delayBetweenRPCRequests: 0
+    delayBetweenRPCRequests: 0,
+    transportFactory: () => http()
   },
 } as const;
 
