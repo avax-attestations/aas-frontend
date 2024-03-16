@@ -79,9 +79,7 @@ async function processCheckpoint(db: Database, checkpoint: any, baseURL: string,
 }
 
 export async function persist(db: Database, mutations: Mutations, nextBlock: number) {
-  if (mutations.length) {
-    console.log(`Processing ${mutations.length} mutations`)
-  }
+  let processed = 0
   for (const mut of mutations) {
     if (mut.blockNumber < nextBlock) {
       // ignore mutations from blocks that have already been processed
@@ -105,5 +103,10 @@ export async function persist(db: Database, mutations: Mutations, nextBlock: num
         console.warn(`Invalid mutation "${op}"`)
         break;
     }
+    processed++
+  }
+
+  if (processed > 0) {
+    console.log(`Processed ${processed} new mutations`)
   }
 }

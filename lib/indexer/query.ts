@@ -130,7 +130,7 @@ export async function computeMutations(
 
   const toBlock = min(currentBlock + blockBatchSize, latestBlock);
   if (toBlock - currentBlock > 1n) {
-    console.log(`${new Date().toISOString()} - ${chain} - Fetching events from block ${currentBlock} to ${toBlock}`);
+    console.log(`${new Date().toISOString()} - ${chain} - Fetching events between blocks ${currentBlock} and ${toBlock}`);
   }
 
   // schemas
@@ -153,6 +153,7 @@ export async function computeMutations(
   )
 
   const allEvents = decodedSchemaRegistryEvents.concat(decodedEasEvents)
+  console.log(`${new Date().toISOString()} - ${chain} - Fetched ${allEvents.length} events between blocks ${currentBlock} and ${toBlock}`);
 
   currentBlock = toBlock + 1n;
 
