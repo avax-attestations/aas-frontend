@@ -16,7 +16,7 @@ const devChains: [ViemChain, ...ViemChain[]] = [
 
 const prodChains: [ViemChain, ...ViemChain[]] = [
   mainnet,
-  // arbitrum,
+  arbitrum,
   avalancheFuji
 ]
 
@@ -41,22 +41,24 @@ export const DEPLOYMENT = {
       deploymentTxn: mainnetEAS.transactionHash as Hash,
       abi: mainnetEAS.abi as Abi
     },
-    blockBatchSize: 800n
+    blockBatchSize: 800n,
+    delayBetweenRPCRequests: 1000
   },
-  // [arbitrum.name]: {
-  //   chain: arbitrum,
-  //   schemaRegistry: {
-  //     address: arbitrumSchemaRegistry.address as Hash,
-  //     deploymentTxn: arbitrumSchemaRegistry.transactionHash as Hash,
-  //     abi: arbitrumSchemaRegistry.abi as Abi
-  //   },
-  //   eas: {
-  //     address: arbitrumEAS.address as Hash,
-  //     deploymentTxn: arbitrumEAS.transactionHash as Hash,
-  //     abi: arbitrumEAS.abi as Abi
-  //   },
-  //   blockBatchSize: 100000n
-  // },
+  [arbitrum.name]: {
+    chain: arbitrum,
+    schemaRegistry: {
+      address: arbitrumSchemaRegistry.address as Hash,
+      deploymentTxn: arbitrumSchemaRegistry.transactionHash as Hash,
+      abi: arbitrumSchemaRegistry.abi as Abi
+    },
+    eas: {
+      address: arbitrumEAS.address as Hash,
+      deploymentTxn: arbitrumEAS.transactionHash as Hash,
+      abi: arbitrumEAS.abi as Abi
+    },
+    blockBatchSize: 100000n,
+    delayBetweenRPCRequests: 2000
+  },
   [avalancheFuji.name]: {
     chain: avalancheFuji,
     schemaRegistry: {
@@ -69,7 +71,8 @@ export const DEPLOYMENT = {
       deploymentTxn: fujiEAS.transactionHash as Hash,
       abi: fujiEAS.abi as Abi
     },
-    blockBatchSize: 2048n
+    blockBatchSize: 2048n,
+    delayBetweenRPCRequests: 0
   },
   [hardhat.name]: {
     chain: hardhat,
@@ -83,7 +86,8 @@ export const DEPLOYMENT = {
       deploymentTxn: '0x0' as Hash,
       abi: fujiEAS.abi as Abi
     },
-    blockBatchSize: 2000n
+    blockBatchSize: 2000n,
+    delayBetweenRPCRequests: 0
   },
 } as const;
 

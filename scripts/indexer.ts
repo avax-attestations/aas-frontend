@@ -107,9 +107,11 @@ async function index() {
     transport: http()
   })
 
+  const delay = DEPLOYMENT[chainName].delayBetweenRPCRequests
+
   while (true) {
-    if (chainName !== 'Avalanche Fuji') {
-      await sleep(1000)
+    if (delay) {
+      await sleep(delay)
     }
     const [fetched, nextBlock, mutations] = await computeMutations(
       chainName, client, (await getNextBlock()), {
