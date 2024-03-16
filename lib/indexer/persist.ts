@@ -11,20 +11,14 @@ export async function index(
   db: Database
 ) {
   while (true) {
-    const [fetched, nextBlock, mutations] = await computeMutations(chain, client, {
+    const [fetched, nextBlock, mutations] = await computeMutations(
+      chain, client, (await db.properties.get('nextBlock'))?.value ?? 0, {
       getSchema: async (uid) => {
         const items = await db.schemas.where('uid').equals(uid).toArray()
         if (items.length !== 1) {
           return null
         }
         return items[0]
-      },
-      getNextBlock: async () => {
-        const result = await db.properties.get('nextBlock')
-        if (!result) {
-          return 0
-        }
-        return Number(result.value)
       }
     })
 

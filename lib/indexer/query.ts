@@ -2,12 +2,7 @@ import type { TableName, Schema, EntityFromTableName } from '@/lib/db'
 import { PublicClient, decodeEventLog, getContract, zeroHash } from 'viem';
 import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Abi, AbiEvent } from 'abitype';
-import {
-  EAS,
-  SchemaEncoder,
-  type Attestation as EASAttestation,
-  TransactionSigner
-} from '@ethereum-attestation-service/eas-sdk';
+import { SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
 import { sleep } from '@/lib/utils';
 
 function min(a: bigint, b: bigint) {
@@ -89,6 +84,7 @@ export const schemaNameUID =
 export async function computeMutations(
   chain: Chain,
   client: PublicClient,
+  nextBlock: number,
   db: Database
 ): Promise<[true, number, Mutations] | [false]> {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
@@ -108,7 +104,7 @@ export async function computeMutations(
   const easEvents = [attestedEvent, revokedEvent, revokedOffchainEvent, timestampedEvent]
 
   const fromBlock = await (async () => {
-    const result = await db.getNextBlock();
+    const result = nextBlock
     if (!result) {
       const hash = DEPLOYMENT[chain].schemaRegistry.deploymentTxn
       if (hash === '0x0') {
@@ -129,9 +125,6 @@ export async function computeMutations(
   }
 
   const toBlock = min(currentBlock + blockBatchSize, latestBlock);
-  if (toBlock - currentBlock > 1n) {
-    console.log(`${new Date().toISOString()} - ${chain} - Fetching events between blocks ${currentBlock} and ${toBlock}`);
-  }
 
   // schemas
   const decodedSchemaRegistryEvents = await getEventsInBlockRangeRetry(
@@ -177,7 +170,7 @@ export async function computeMutations(
         mutations.push(...(await handleTimestampedEvent(event)))
         break;
       default:
-        console.warn(`Unexpected event ${event.decodedEvent.eventName}`)
+        console.warn(`Unhandled event ${event.decodedEvent.eventName}`)
         break;
     }
   }
@@ -262,7 +255,6 @@ function timeToNumber(timestamp: bigint) {
 
 interface Database {
   getSchema: (uid: string) => Promise<Schema | null>
-  getNextBlock: () => Promise<number>
 }
 
 interface AttestationRecord {
@@ -456,7 +448,3 @@ async function handleTimestampedEvent(event: Event): Promise<Mutations> {
     blockNumber: Number(event.block.number)
   }]
 }
-
-// async function handleRevokedOffchainEvent(event: Event) {
-//   console.log('Revoked offchain event', event)
-// }
