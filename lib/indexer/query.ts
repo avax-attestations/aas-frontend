@@ -33,7 +33,7 @@ async function getEventsInBlockRangeRetry(
     try {
       return await getEventsInBlockRange(client, contractAddress, abi, events, fromBlock, toBlock)
     } catch (err) {
-      await sleep(1000)
+      await sleep(2000)
       tries++
       if (tries > 10) {
         console.error('failed to get events in block range', fromBlock, toBlock, err)
