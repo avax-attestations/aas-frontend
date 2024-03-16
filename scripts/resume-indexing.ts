@@ -63,7 +63,7 @@ async function runChain(chain: Chain) {
     stdio: 'inherit'
   })
 
-  const timeoutSeconds = 15 * 60
+  const timeoutSeconds = 45 * 60  // kill after 45 minutes
   setTimeout(() => {
     console.log(`Killing indexing process for "${chain}" after ${timeoutSeconds} seconds`)
     indexingProcess.kill('SIGUSR1')
@@ -93,6 +93,7 @@ async function run() {
 
 run().then(() => {
   console.log('Done indexing all chains')
+  process.exit(0)
 }).catch((err) => {
   console.error('Failed to index', err)
   process.exit(1)

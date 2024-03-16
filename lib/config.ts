@@ -83,18 +83,24 @@ export const DEPLOYMENT = {
       deploymentTxn: sepoliaEAS.transactionHash as Hash,
       abi: sepoliaEAS.abi as Abi
     },
-    blockBatchSize: 2n,
-    delayBetweenRPCRequests: 1000,
+    blockBatchSize: 1n,
+    delayBetweenRPCRequests: 0,
     transportFactory: () => {
-      const apiKey = process.env.SEPOLIA_ALCHEMY_API_KEY;
-      if (!apiKey) {
-        return http()
-      }
-      return http(`https://eth-sepolia.g.alchemy.com/v2/${apiKey}`, {
+      return http('https://rpc-sepolia.rockx.com/', {
         batch: {
-          wait: 500
+          wait: 1000
         }
       })
+
+      // const apiKey = process.env.SEPOLIA_ALCHEMY_API_KEY;
+      // if (!apiKey) {
+      //   return http()
+      // }
+      // return http(`https://eth-sepolia.g.alchemy.com/v2/${apiKey}`, {
+      //   batch: {
+      //     wait: 1000
+      //   }
+      // })
     }
 
   },
