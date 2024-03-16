@@ -1,4 +1,4 @@
-import { Chain as ViemChain, mainnet, arbitrum, avalancheFuji, hardhat } from 'viem/chains';
+import { Chain as ViemChain, mainnet, arbitrum, sepolia, avalancheFuji, hardhat } from 'viem/chains';
 import { http } from 'viem';
 import { Abi } from 'abitype';
 
@@ -7,6 +7,9 @@ import mainnetEAS from '@ethereum-attestation-service/eas-contracts/deployments/
 
 import arbitrumSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/SchemaRegistry.json'
 import arbitrumEAS from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/EAS.json'
+
+import sepoliaSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/SchemaRegistry.json'
+import sepoliaEAS from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/EAS.json'
 
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
@@ -58,7 +61,7 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 25000n,
+    blockBatchSize: 2500n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
@@ -79,6 +82,29 @@ export const DEPLOYMENT = {
       //   }
       // })
     }
+  },
+  [sepolia.name]: {
+    chain: sepolia,
+    schemaRegistry: {
+      address: sepoliaSchemaRegistry.address as Hash,
+      deploymentTxn: sepoliaSchemaRegistry.transactionHash as Hash,
+      abi: sepoliaSchemaRegistry.abi as Abi
+    },
+    eas: {
+      address: sepoliaEAS.address as Hash,
+      deploymentTxn: sepoliaEAS.transactionHash as Hash,
+      abi: sepoliaEAS.abi as Abi
+    },
+    blockBatchSize: 10n,
+    delayBetweenRPCRequests: 0,
+    transportFactory: () => {
+      const apiKey = process.env.SEPOLIA_ALCHEMY_API_KEY;
+      if (!apiKey) {
+        return http()
+      }
+      return http(`https://eth-sepolia.g.alchemy.com/v2/${apiKey}`)
+    }
+
   },
   [avalancheFuji.name]: {
     chain: avalancheFuji,
