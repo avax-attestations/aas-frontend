@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import fs from 'fs'
-import { createPublicClient, http } from 'viem';
+import { createPublicClient } from 'viem';
 import sqlite3 from 'better-sqlite3'
 import { program, Option } from 'commander'
 import { DEPLOYMENT } from "@/lib/config";
@@ -64,6 +64,16 @@ const createDb = (chain: string): ReturnType<typeof sqlite3> => {
   }
 
   return db;
+}
+
+export function writeAtomic(file: string, data: string, keepExisting: boolean = false) {
+  if (keepExisting && fs.existsSync(file)) {
+    return
+  }
+  const tmpName = `${file}.tmp`
+  fs.writeFileSync(tmpName, data)
+  fs.renameSync(tmpName, file)
+  console.log('created', file)
 }
 
 const db = createDb(opts.chain)
@@ -178,8 +188,7 @@ async function index() {
     // compute sha256 hash of batchJson and write it to a file named after the hash
     const hash = crypto.createHash('sha256').update(batchJson).digest('hex')
     const fname = `${outDir}/${hash}.json`
-    console.log('writing', fname)
-    fs.writeFileSync(fname, batchJson)
+    writeAtomic(fname, batchJson, true)
 
     const min = Number((rows[0] as any).block)
     const max = Number((rows[rows.length - 1] as any).block)
@@ -189,7 +198,7 @@ async function index() {
   index[index.length - 1].max = Number(await getNextBlock()) - 1
   const fname = `${outDir}/index.json`
   console.log('writing', fname)
-  fs.writeFileSync(fname, JSON.stringify(index))
+  writeAtomic(fname, JSON.stringify(index), true)
 }
 
 index().then(() => {

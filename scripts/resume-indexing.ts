@@ -20,8 +20,8 @@ const streamPipeline = promisify(pipeline);
 async function fetchFile(baseURL: string, filename: string, outDir: string) {
   const url = `${baseURL}/${filename}`
   const outPath = path.join(outDir, filename)
+  const tmpPath = `${outPath}.tmp`
 
-  console.log(`download ${url} to ${outPath}`);
   const response = await fetch(url);
 
   if (!response.ok || response.body === null) {
@@ -29,7 +29,9 @@ async function fetchFile(baseURL: string, filename: string, outDir: string) {
     return Promise.resolve(null);
   }
 
-  return streamPipeline(response.body as any, fs.createWriteStream(outPath));
+  await streamPipeline(response.body as any, fs.createWriteStream(tmpPath));
+  fs.renameSync(tmpPath, outPath);
+  console.log(`downloaded ${url} to ${outPath}`);
 }
 
 async function runChain(chain: Chain) {
