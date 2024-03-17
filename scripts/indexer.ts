@@ -68,6 +68,7 @@ const createDb = (chain: string): ReturnType<typeof sqlite3> => {
 
 export function writeAtomic(file: string, data: string, keepExisting: boolean = false) {
   if (keepExisting && fs.existsSync(file)) {
+    console.log(`${file} already exists, skipping`)
     return
   }
   const tmpName = `${file}.tmp`
