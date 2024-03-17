@@ -4,15 +4,15 @@ import { Database } from '@/lib/db';
 import { type PublicClient } from 'viem';
 import { normalizeChainName, sleep } from '@/lib/utils';
 
-
 export async function index(
   chain: Chain,
   client: PublicClient,
-  db: Database
+  db: Database,
+  signal: { shouldStop: boolean }
 ) {
   const delay = DEPLOYMENT[chain].delayBetweenRPCRequests
 
-  while (true) {
+  while (!signal.shouldStop) {
     const [fetched, nextBlock, mutations] = await computeMutations(
       chain, client, (await db.properties.get('nextBlock'))?.value ?? 0, {
       getSchema: async (uid) => {

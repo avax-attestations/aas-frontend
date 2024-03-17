@@ -24,6 +24,7 @@ export function useIndexer() {
 
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let unmounted = false;
+    const signal = { shouldStop: false };
 
     function run() {
       timeout = null;
@@ -32,7 +33,7 @@ export function useIndexer() {
         return;
       }
 
-      index(chain, client, db).finally(() => {
+      index(chain, client, db, signal).finally(() => {
         timeout = setTimeout(run, POLL_INTERVAL)
       })
     }
@@ -44,6 +45,7 @@ export function useIndexer() {
     }, 1000)
 
     return () => {
+      signal.shouldStop = true;
       unmounted = true;
       if (timeout !== null) {
         clearTimeout(timeout);
