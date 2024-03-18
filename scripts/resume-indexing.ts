@@ -42,9 +42,11 @@ async function runChain(chain: Chain) {
 
   const baseURL = `${opts.baseUrl.replace('/$', '')}/indexing/${normalizeChainName(chain)}`
 
-  await fetchFile(baseURL, 'index.db', outDir)
-  if (!fs.existsSync(`${outDir}/index.db`) && !opts.allowStartFromScratch) {
-    throw new Error('Failed to download index.db (if starting from scratch, pass --allow-start-from-scratch)')
+  if (chain !== 'OP Mainnet') {
+    await fetchFile(baseURL, 'index.db', outDir)
+    if (!fs.existsSync(`${outDir}/index.db`) && !opts.allowStartFromScratch) {
+      throw new Error('Failed to download index.db (if starting from scratch, pass --allow-start-from-scratch)')
+    }
   }
 
   await fetchFile(baseURL, 'index.json', outDir)
@@ -57,11 +59,15 @@ async function runChain(chain: Chain) {
     }
   })()
 
-  const checkpointsFetch = []
   for (const checkpoint of indexJson) {
-    checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir))
+    await fetchFile(baseURL, `${checkpoint.hash}.json`, outDir)
   }
-  await Promise.all(checkpointsFetch)
+  // await Promise.all(checkpointsFetch)
+  // const checkpointsFetch = []
+  // for (const checkpoint of indexJson) {
+  //   checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir))
+  // }
+  // await Promise.all(checkpointsFetch)
 
   const indexingProcess = cp.spawn(process.execPath, ['indexer.js', '-c', chain, outDir], {
     stdio: 'inherit'

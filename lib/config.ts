@@ -87,7 +87,7 @@ export const DEPLOYMENT = {
       deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd' as Hash,
       abi: optimismEAS.abi as Abi
     },
-    blockBatchSize: 32n,
+    blockBatchSize: 128n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
