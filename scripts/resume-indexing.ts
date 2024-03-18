@@ -57,9 +57,11 @@ async function runChain(chain: Chain) {
     }
   })()
 
+  const checkpointsFetch = []
   for (const checkpoint of indexJson) {
-    await fetchFile(baseURL, `${checkpoint.hash}.json`, outDir)
+    checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir))
   }
+  await Promise.all(checkpointsFetch)
 
   const indexingProcess = cp.spawn(process.execPath, ['indexer.js', '-c', chain, outDir], {
     stdio: 'inherit'
