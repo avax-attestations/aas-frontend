@@ -3,11 +3,7 @@ import { PublicClient, decodeEventLog, getContract, zeroHash } from 'viem';
 import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Abi, AbiEvent } from 'abitype';
 import { SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
-import { sleep } from '@/lib/utils';
-
-function min(a: bigint, b: bigint) {
-  return a < b ? a : b;
-}
+import { blockQueryRange, min, sleep } from '@/lib/utils';
 
 function getEventFromAbi(abi: Abi, eventName: string) {
   const event = abi.find(
@@ -20,6 +16,9 @@ function getEventFromAbi(abi: Abi, eventName: string) {
   return event as AbiEvent;
 }
 
+// Fetch events in a block range, retrying with half the range on failure
+// until the range is 1 block. If it fails with a range of 1 block,
+// the exception will be propagated.
 async function getEventsInBlockRangeRetry(
   client: PublicClient,
   contractAddress: `0x${string}`,
@@ -28,15 +27,25 @@ async function getEventsInBlockRangeRetry(
   fromBlock: bigint,
   toBlock: bigint
 ) {
-  let tries = 1;
+  const gen = blockQueryRange(fromBlock, toBlock)
+  const result = []
+  let prevRangeResult = false
+
   while (true) {
+    const next = gen.next(prevRangeResult)
+    if (next.done) {
+      return result
+    }
+
+    const [from, to] = next.value
     try {
-      return await getEventsInBlockRange(client, contractAddress, abi, events, fromBlock, toBlock)
+      result.push(...(await getEventsInBlockRange(client, contractAddress, abi, events, from, to)))
+      prevRangeResult = true
     } catch (err) {
-      await sleep(2000)
-      tries++
-      if (tries > 10) {
-        console.error('failed to get events in block range', fromBlock, toBlock, err)
+      prevRangeResult = false
+      console.error(`Error fetching events between blocks ${from} and ${to}, will retry in 500 milliseconds with half the range`)
+      await sleep(500)
+      if (from === to) {
         throw err
       }
     }

@@ -52,3 +52,37 @@ export function timeAgo(timestampInSeconds: number): string {
 export function normalizeChainName(chain: string): string {
   return chain.toLowerCase().replace(' ', '-').replace(/\/$/, '');
 }
+
+export function min(a: bigint, b: bigint) {
+  return a < b ? a : b;
+}
+
+export function max(a: bigint, b: bigint) {
+  return a > b ? a : b;
+}
+
+export function *blockQueryRange(
+  fromBlock: bigint,
+  toBlock: bigint,
+) {
+  let from = fromBlock
+  let to = toBlock
+
+  while (from <= toBlock) {
+    const result: boolean = yield [from, to]
+
+    if (result) {
+      from = to + 1n
+      to = toBlock
+      continue
+    }
+
+    // previous range failed, retry with half the range
+    const currentRange = to - from
+    if (currentRange === 0n) {
+      throw Error('Cannot query a range lower than 1')
+    }
+    const newRange = max(currentRange / 2n, 0n)
+    to = from + newRange
+  }
+}
