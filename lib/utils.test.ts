@@ -41,7 +41,10 @@ describe("getBlockQueryRange", () => {
     expect(gen.next(false).value).toEqual([1n, 4n])
     expect(gen.next(false).value).toEqual([1n, 2n])
     expect(gen.next(false).value).toEqual([1n, 1n])
-    expect(() => gen.next(false)).toThrow('Cannot query a range lower than 1')
+    expect(gen.next(false).value).toEqual([1n, 1n])
+    expect(gen.next(false).value).toEqual([1n, 1n])
+    expect(gen.next(false).value).toEqual([1n, 1n])
+    expect(gen.next(false).value).toEqual([1n, 1n])
   })
 
   test("success after only failures", () => {

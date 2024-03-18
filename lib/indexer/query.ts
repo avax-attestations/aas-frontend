@@ -31,6 +31,7 @@ async function getEventsInBlockRangeRetry(
   const gen = blockQueryRange(fromBlock, toBlock)
   const result = []
   let prevRangeResult = false
+  let tries = 0;
 
   while (true) {
     const next = gen.next(prevRangeResult)
@@ -42,12 +43,16 @@ async function getEventsInBlockRangeRetry(
     try {
       result.push(...(await getEventsInBlockRange(client, contractAddress, abi, events, from, to)))
       prevRangeResult = true
+      tries = 0
     } catch (err) {
       prevRangeResult = false
-      console.error(`${new Date().toISOString()} - ${chain} - Error fetching events between blocks ${from} and ${to}, will retry in 500 milliseconds with half the range`);
-      await sleep(500)
+      console.error(`${new Date().toISOString()} - ${chain} - Error fetching events between blocks ${from} and ${to}, will retry a lower range`);
       if (from === to) {
-        throw err
+        tries++
+        await sleep(1000)
+        if (tries > 10) {
+          throw err
+        }
       }
     }
   }

@@ -80,7 +80,7 @@ export function *blockQueryRange(
     // previous range failed, retry with half the range
     const currentRange = to - from
     if (currentRange === 0n) {
-      throw Error('Cannot query a range lower than 1')
+      continue
     }
     const newRange = max(currentRange / 2n, 0n)
     to = from + newRange
