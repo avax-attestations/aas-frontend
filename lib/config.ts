@@ -1,4 +1,4 @@
-import { Chain as ViemChain, mainnet, arbitrum, sepolia, avalancheFuji, hardhat } from 'viem/chains';
+import { Chain as ViemChain, mainnet, arbitrum, optimism, sepolia, avalancheFuji, hardhat } from 'viem/chains';
 import { http } from 'viem';
 import { Abi } from 'abitype';
 
@@ -7,6 +7,9 @@ import mainnetEAS from '@ethereum-attestation-service/eas-contracts/deployments/
 
 import arbitrumSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/SchemaRegistry.json'
 import arbitrumEAS from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/EAS.json'
+
+import optimismSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/optimism/SchemaRegistry.json'
+import optimismEAS from '@ethereum-attestation-service/eas-contracts/deployments/optimism/EAS.json'
 
 import sepoliaSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/SchemaRegistry.json'
 import sepoliaEAS from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/EAS.json'
@@ -63,6 +66,28 @@ export const DEPLOYMENT = {
       abi: arbitrumEAS.abi as Abi
     },
     blockBatchSize: 2500n,
+    delayBetweenRPCRequests: 0,
+    transportFactory: () => {
+      return http(undefined, {
+        batch: {
+          wait: 0
+        }
+      })
+    }
+  },
+  [optimism.name]: {
+    chain: optimism,
+    schemaRegistry: {
+      address: optimismSchemaRegistry.address as Hash,
+      deploymentTxn: '0xbd060241daff5f0c3d02cc687d91e93c1f06b73de47f7f51eac3cec5485391ac',
+      abi: optimismSchemaRegistry.abi as Abi
+    },
+    eas: {
+      address: optimismEAS.address as Hash,
+      deploymentTxn: '0xbd060241daff5f0c3d02cc687d91e93c1f06b73de47f7f51eac3cec5485391ac',
+      abi: optimismEAS.abi as Abi
+    },
+    blockBatchSize: 10000n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
