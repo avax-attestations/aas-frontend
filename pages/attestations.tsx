@@ -9,7 +9,7 @@ export default function AttestationsPage() {
 
   const {
     attestations,
-    totalRecords,
+    recordCount,
   } = useAttestationQuery({
     searchParams,
     pageSize
@@ -19,7 +19,7 @@ export default function AttestationsPage() {
     <Attestations
       attestations={attestations}
       searchParams={searchParams}
-      totalRecords={totalRecords}
+      recordCount={recordCount}
       pageSize={pageSize}
     />
   );

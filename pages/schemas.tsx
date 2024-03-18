@@ -11,7 +11,7 @@ export default function SchemasPage() {
 
   const {
     schemas,
-    totalRecords,
+    recordCount,
   } = useSchemaQuery({
     searchParams,
     pageSize
@@ -21,7 +21,7 @@ export default function SchemasPage() {
     <Schemas
       schemas={schemas}
       searchParams={searchParams}
-      totalRecords={totalRecords}
+      recordCount={recordCount}
       pageSize={pageSize}
       walletAddress={walletClient?.account.address ?? ''}
     />

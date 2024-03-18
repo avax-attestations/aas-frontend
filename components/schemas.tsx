@@ -6,14 +6,14 @@ import { PlusCircle, SquarePen } from "lucide-react";
 import { Paginator } from "@/components/paginator";
 import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
 import Link from "next/link";
-import { usePaginator } from "@/hooks/usePaginator";
+import { getPage, usePaginator } from "@/hooks/usePaginator";
 import { SchemaQueryRow } from "@/hooks/query/useSchemaQuery";
 import { SearchForm } from "@/components/search-form";
 
 export interface SchemasProps {
   schemas: SchemaQueryRow[]
   searchParams: ReadonlyURLSearchParams
-  totalRecords: number
+  recordCount: number
   pageSize: number
   walletAddress: string
 }
@@ -21,18 +21,20 @@ export interface SchemasProps {
 export function Schemas({
   schemas,
   searchParams,
-  totalRecords,
+  recordCount,
   pageSize,
   walletAddress,
 }: SchemasProps) {
+  const page = getPage(searchParams)
   const {
-    page,
     pageCount,
     prevHref,
-    nextHref
+    nextHref,
+    firstHref,
+    lastHref
   } = usePaginator({
-    totalRecords: totalRecords,
-    pageSize: pageSize,
+    recordCount,
+    pageSize,
     searchParams
   })
 
@@ -44,7 +46,7 @@ export function Schemas({
         <SearchForm
           searchParams={searchParams}
           placeholder="UID, schema or resolver"
-          />
+        />
 
         <Button asChild>
           <Link href="/schema-create">
@@ -54,7 +56,15 @@ export function Schemas({
         </Button>
       </div>
 
-      <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
+      <Paginator
+        prevHref={prevHref}
+        nextHref={nextHref}
+        page={page}
+        firstHref={firstHref}
+        lastHref={lastHref}
+        recordCount={recordCount}
+        pageSize={pageSize}
+        />
       <div className="border rounded">
         <Table>
           <TableHeader>
@@ -127,7 +137,15 @@ export function Schemas({
           </TableBody>
         </Table>
       </div>
-      <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
+      <Paginator
+        prevHref={prevHref}
+        nextHref={nextHref}
+        page={page}
+        firstHref={firstHref}
+        lastHref={lastHref}
+        recordCount={recordCount}
+        pageSize={pageSize}
+        />
     </>
   );
 };

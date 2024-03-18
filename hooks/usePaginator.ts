@@ -1,41 +1,54 @@
 import { ReadonlyURLSearchParams } from "next/navigation";
 
 export interface PaginatorProps {
-  totalRecords: number
+  recordCount: number
   pageSize: number
   searchParams: ReadonlyURLSearchParams
 }
 
-function getPageCount(totalRecords: number, pageSize: number): number {
+function getPageCount(recordCount: number, pageSize: number): number {
   if (pageSize === 0) {
     throw new Error("Page size must be greater than 0");
   }
 
-  return Math.ceil(totalRecords / pageSize);
+  return Math.ceil(recordCount / pageSize);
+}
+
+export function getPage(searchParams: ReadonlyURLSearchParams): number {
+  const p = parseInt(searchParams.get('page') ?? '1')
+  if (Number.isNaN(p)) {
+    return 1;
+  }
+  return p;
 }
 
 export function usePaginator({
-  totalRecords,
+  recordCount,
+  searchParams,
   pageSize,
-  searchParams
 }: PaginatorProps) {
-  const page = (() => {
-    const p = parseInt(searchParams.get('page') ?? '1')
-    if (Number.isNaN(p)) {
-      return 1;
+
+  const page = getPage(searchParams)
+  const pageCount = Math.max(getPageCount(recordCount, pageSize), 1)
+
+  function getUrl(page: number) {
+    const params = new URLSearchParams(searchParams)
+    if (page < 1) {
+      params.delete('page')
+    } else if (page > pageCount) {
+      params.set('page', pageCount.toString())
+    } else {
+      params.set('page', page.toString())
     }
-    return p;
-  })()
+    return {
+      search: params.toString()
+    }
+  }
 
-  const pageCount = Math.max(getPageCount(totalRecords ?? 0, pageSize), 1)
-  const canGoPrev = page > 1;
-  const canGoNext = page < pageCount;
-  const prevHref = canGoPrev ? ('?' + new URLSearchParams({
-    page: Math.max(page - 1, 1).toString()
-  }).toString()) : '#'
-  const nextHref = canGoNext ? ('?' + new URLSearchParams({
-    page: Math.min(page + 1, pageCount).toString()
-  }).toString()) : '#'
+  const prevHref = getUrl(page - 1)
+  const nextHref = getUrl(page + 1)
+  const firstHref = getUrl(1)
+  const lastHref = getUrl(pageCount)
 
-  return { page, pageCount, prevHref, nextHref }
+  return { page, pageCount, prevHref, nextHref, firstHref, lastHref }
 }

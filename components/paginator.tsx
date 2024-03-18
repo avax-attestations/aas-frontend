@@ -4,47 +4,56 @@ import {
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
+  PaginationFirst,
+  PaginationLast,
 } from "@/components/ui/pagination"
-import Link from "next/link";
+import Link, { LinkProps } from "next/link";
 
 
 export interface PaginatorProps {
-  prevHref: string
-  nextHref: string
-  pageCount: number
+  prevHref: LinkProps['href']
+  nextHref: LinkProps['href']
+  firstHref: LinkProps['href']
+  lastHref: LinkProps['href']
   page: number
+  pageSize: number
+  recordCount: number
 }
 
-export function Paginator({ page, pageCount, prevHref, nextHref }: PaginatorProps) {
-  const hasPrev = prevHref !== '#'
-  const hasNext = nextHref !== '#'
-
+export function Paginator({
+  page, prevHref, nextHref, firstHref, lastHref, recordCount, pageSize
+}: PaginatorProps) {
   return (
     <Pagination>
       <PaginationContent>
         <PaginationItem>
           <Link legacyBehavior passHref
-            className={!hasPrev ? 'pointer-events-none' : ''}
-            tabIndex={!hasPrev ? -1 : undefined}
-            aria-disabled={!hasPrev}
+            href={firstHref}>
+            <PaginationFirst />
+          </Link>
+        </PaginationItem>
+        <PaginationItem>
+          <Link legacyBehavior passHref
             href={prevHref}>
             <PaginationPrevious />
           </Link>
         </PaginationItem>
         <PaginationItem>
-          Page {page} of {pageCount}
+          {page === 1 ? 1 : (page - 1) * pageSize} - {Math.min(page * pageSize, recordCount)} of {recordCount}
         </PaginationItem>
         <PaginationItem>
           <Link legacyBehavior passHref
-            className={!hasNext ? 'pointer-events-none' : ''}
-            tabIndex={!hasNext ? -1 : undefined}
-            aria-disabled={!hasNext}
             href={nextHref}>
             <PaginationNext />
+          </Link>
+        </PaginationItem>
+        <PaginationItem>
+          <Link legacyBehavior passHref
+            href={lastHref}>
+            <PaginationLast />
           </Link>
         </PaginationItem>
       </PaginationContent>
     </Pagination>
   )
 }
-

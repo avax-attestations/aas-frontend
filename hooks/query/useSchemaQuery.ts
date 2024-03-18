@@ -1,7 +1,7 @@
 import { type ReadonlyURLSearchParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
-import { usePaginator } from "@/hooks/usePaginator";
+import { getPage } from "@/hooks/usePaginator";
 
 export interface SchemaQueryRow {
   id: number
@@ -20,8 +20,9 @@ export type UseSchemaQueryOpts = {
 
 export type SchemaQueryReturn = {
   schemas: SchemaQueryRow[]
-  totalRecords: number
+  recordCount: number
 }
+
 
 export function useSchemaQuery({
   searchParams,
@@ -29,36 +30,39 @@ export function useSchemaQuery({
 }: UseSchemaQueryOpts): SchemaQueryReturn {
   const db = useDb();
 
-  const totalRecords = useLiveQuery(() => db.schemas.count(), [db]) ?? 0
+  const page = getPage(searchParams)
+  const searchStr = (searchParams.get('search') ?? '').trim().toLowerCase()
 
-  const { page } = usePaginator({
-    totalRecords: totalRecords,
-    pageSize,
-    searchParams
-  })
+  function getQuery() {
+    let query = db.schemas
+      .orderBy('id')
+      .reverse()
 
-  const searchStr = (searchParams.get('search') ?? '').trim()
+    if (searchStr) {
+      query = query
+        .filter(s =>
+          s.name.toLowerCase().includes(searchStr) ||
+          s.schema.toLowerCase().includes(searchStr) ||
+          s.uid.toLowerCase().includes(searchStr) ||
+          s.resolver.toLowerCase().includes(searchStr))
+    }
+
+    return query
+  }
+
+  const recordCount = useLiveQuery(
+    () => getQuery().count()
+    , [db, searchStr]) ?? 0
 
   const schemas = (useLiveQuery(
-    () => searchStr ?
-      db.schemas
-        .where('name').startsWithIgnoreCase(searchStr)
-        .or('uid').startsWithIgnoreCase(searchStr)
-        .or('resolver').startsWithIgnoreCase(searchStr)
-        .reverse()
-        .offset((page - 1) * pageSize)
-        .limit(pageSize)
-        .sortBy('id') :
-      db.schemas
-        .orderBy('id')
-        .reverse()
-        .offset((page - 1) * pageSize)
-        .limit(pageSize)
-        .toArray()
+    () => getQuery()
+      .offset((page - 1) * pageSize)
+      .limit(pageSize)
+      .toArray()
     , [db, page, searchStr]) ?? []).map(s => ({ ...s, id: s.id ?? -1 }))
 
   return {
     schemas,
-    totalRecords
+    recordCount
   }
 }

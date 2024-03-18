@@ -1,7 +1,7 @@
 import { type ReadonlyURLSearchParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
-import { usePaginator } from "@/hooks/usePaginator";
+import { getPage } from "@/hooks/usePaginator";
 
 export interface AttestationQueryRow {
   id: number
@@ -21,7 +21,7 @@ export interface UseAttestationQueryOpts {
 
 export interface UseAttestationReturn {
   attestations: AttestationQueryRow[]
-  totalRecords: number
+  recordCount: number
 }
 
 export function useAttestationQuery({
@@ -30,34 +30,36 @@ export function useAttestationQuery({
 }: UseAttestationQueryOpts): UseAttestationReturn {
   const db = useDb();
 
-  const totalRecords = useLiveQuery(() => db.attestations.count(), [db]) ?? 0
+  const page = getPage(searchParams)
+  const searchStr = (searchParams.get('search') ?? '').trim().toLowerCase()
 
-  const { page } = usePaginator({
-    totalRecords: totalRecords,
-    pageSize,
-    searchParams
-  })
+  function getQuery() {
+    let query = db.attestations
+      .orderBy('id')
+      .reverse()
 
-  const searchStr = (searchParams.get('search') ?? '').trim()
+    if (searchStr) {
+      query = query
+        .filter(a =>
+          a.uid.toLowerCase().includes(searchStr) ||
+          a.attester.toLowerCase().includes(searchStr) ||
+          a.recipient.toLowerCase().includes(searchStr) ||
+          a.schemaId.toLowerCase().includes(searchStr))
+    }
 
-  const attestations = useLiveQuery(
-    () => searchStr ?
-      db.attestations
-        .where('uid').startsWithIgnoreCase(searchStr)
-        .or('attester').startsWithIgnoreCase(searchStr)
-        .or('recipient').startsWithIgnoreCase(searchStr)
-        .or('schemaId').startsWithIgnoreCase(searchStr)
-        .reverse()
-        .offset((page - 1) * pageSize)
-        .limit(pageSize)
-        .sortBy('id') :
-      db.attestations
-        .orderBy('id')
-        .reverse()
-        .offset((page - 1) * pageSize)
-        .limit(pageSize)
-        .toArray()
-    , [db, page, searchStr])
+    return query
+  }
+
+  const recordCount = useLiveQuery(
+    () => getQuery().count()
+    , [db, searchStr]) ?? 0
+
+  const attestations = (useLiveQuery(
+    () => getQuery()
+      .offset((page - 1) * pageSize)
+      .limit(pageSize)
+      .toArray()
+    , [db, page, searchStr]) ?? [])
 
   const schemas = useLiveQuery(
     () => db.schemas
@@ -78,6 +80,6 @@ export function useAttestationQuery({
 
   return {
     attestations: joined,
-    totalRecords: totalRecords
+    recordCount
   }
 }

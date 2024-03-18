@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { timeAgo, truncateEllipsis } from "@/lib/utils";
 import { Paginator } from "@/components/paginator";
-import { usePaginator } from "@/hooks/usePaginator";
+import { getPage, usePaginator } from "@/hooks/usePaginator";
 import { ReadonlyURLSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AttestationQueryRow } from "@/hooks/query/useAttestationQuery";
@@ -10,24 +10,26 @@ import { SearchForm } from "./search-form";
 export interface AttestationsProps {
   attestations: AttestationQueryRow[]
   searchParams: ReadonlyURLSearchParams
-  totalRecords: number
+  recordCount: number
   pageSize: number
 }
 
 export function Attestations({
-  totalRecords,
+  recordCount,
   searchParams,
+  pageSize,
   attestations,
 }: AttestationsProps) {
-
+  const page = getPage(searchParams)
   const {
-    page,
     pageCount,
     prevHref,
-    nextHref
+    nextHref,
+    firstHref,
+    lastHref
   } = usePaginator({
-    totalRecords: totalRecords ?? 0,
-    pageSize: 20,
+    recordCount,
+    pageSize,
     searchParams
   })
 
@@ -42,7 +44,15 @@ export function Attestations({
         />
       </div>
 
-      <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
+      <Paginator
+        prevHref={prevHref}
+        nextHref={nextHref}
+        page={page}
+        firstHref={firstHref}
+        lastHref={lastHref}
+        recordCount={recordCount}
+        pageSize={pageSize}
+        />
       <div className="border rounded">
         <Table>
           <TableHeader>
@@ -91,7 +101,15 @@ export function Attestations({
           </TableBody>
         </Table>
       </div>
-      <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
+      <Paginator
+        prevHref={prevHref}
+        nextHref={nextHref}
+        page={page}
+        firstHref={firstHref}
+        lastHref={lastHref}
+        recordCount={recordCount}
+        pageSize={pageSize}
+        />
     </>
   );
 };
