@@ -20,6 +20,7 @@ function getEventFromAbi(abi: Abi, eventName: string) {
 // until the range is 1 block. If it fails with a range of 1 block,
 // the exception will be propagated.
 async function getEventsInBlockRangeRetry(
+  chain: Chain,
   client: PublicClient,
   contractAddress: `0x${string}`,
   abi: Abi,
@@ -43,7 +44,7 @@ async function getEventsInBlockRangeRetry(
       prevRangeResult = true
     } catch (err) {
       prevRangeResult = false
-      console.error(`Error fetching events between blocks ${from} and ${to}, will retry in 500 milliseconds with half the range`)
+      console.error(`${new Date().toISOString()} - ${chain} - Error fetching events between blocks ${from} and ${to}, will retry in 500 milliseconds with half the range`);
       await sleep(500)
       if (from === to) {
         throw err
@@ -137,6 +138,7 @@ export async function computeMutations(
 
   // schemas
   const decodedSchemaRegistryEvents = await getEventsInBlockRangeRetry(
+    chain,
     client,
     schemaRegistryAddress,
     schemaRegistryAbi,
@@ -146,6 +148,7 @@ export async function computeMutations(
   )
 
   const decodedEasEvents = await getEventsInBlockRangeRetry(
+    chain,
     client,
     easAddress,
     easAbi,
