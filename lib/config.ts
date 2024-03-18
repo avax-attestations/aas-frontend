@@ -49,7 +49,7 @@ export const DEPLOYMENT = {
       deploymentTxn: mainnetEAS.transactionHash as Hash,
       abi: mainnetEAS.abi as Abi
     },
-    blockBatchSize: 400n,
+    blockBatchSize: 512n,
     delayBetweenRPCRequests: 1000,
     transportFactory: () => http()
   },
@@ -65,7 +65,7 @@ export const DEPLOYMENT = {
       deploymentTxn: arbitrumEAS.transactionHash as Hash,
       abi: arbitrumEAS.abi as Abi
     },
-    blockBatchSize: 25000n,
+    blockBatchSize: 32768n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http(undefined, {
@@ -109,7 +109,7 @@ export const DEPLOYMENT = {
       deploymentTxn: sepoliaEAS.transactionHash as Hash,
       abi: sepoliaEAS.abi as Abi
     },
-    blockBatchSize: 2500n,
+    blockBatchSize: 2048n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => {
       return http('https://rpc-sepolia.rockx.com/', {
@@ -132,7 +132,7 @@ export const DEPLOYMENT = {
       deploymentTxn: fujiEAS.transactionHash as Hash,
       abi: fujiEAS.abi as Abi
     },
-    blockBatchSize: 1024n,
+    blockBatchSize: 2048n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => http()
   },
@@ -148,7 +148,7 @@ export const DEPLOYMENT = {
       deploymentTxn: '0x0' as Hash,
       abi: fujiEAS.abi as Abi
     },
-    blockBatchSize: 2000n,
+    blockBatchSize: 2048n,
     delayBetweenRPCRequests: 0,
     transportFactory: () => http()
   },
