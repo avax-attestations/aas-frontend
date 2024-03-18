@@ -3,12 +3,12 @@ import { truncateEllipsis } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { type ReadonlyURLSearchParams } from "next/navigation";
 import { PlusCircle, SquarePen } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Paginator } from "@/components/paginator";
 import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
 import Link from "next/link";
 import { usePaginator } from "@/hooks/usePaginator";
 import { SchemaQueryRow } from "@/hooks/query/useSchemaQuery";
+import { SearchForm } from "@/components/search-form";
 
 export interface SchemasProps {
   schemas: SchemaQueryRow[]
@@ -23,7 +23,7 @@ export function Schemas({
   searchParams,
   totalRecords,
   pageSize,
-  walletAddress
+  walletAddress,
 }: SchemasProps) {
   const {
     page,
@@ -41,15 +41,10 @@ export function Schemas({
       <h1 className="text-3xl font-bold">Schemas</h1>
 
       <div className="flex items-center justify-between">
-        <form className="flex items-center gap-2">
-          <Input
-            className="px-16"
-            name="search"
-            placeholder="UID, schema or resolver" />
-          <Button type="submit" variant="secondary">
-            Search
-          </Button>
-        </form>
+        <SearchForm
+          searchParams={searchParams}
+          placeholder="UID, schema or resolver"
+          />
 
         <Button asChild>
           <Link href="/schema-create">

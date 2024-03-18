@@ -1,12 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { timeAgo, truncateEllipsis } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Paginator } from "@/components/paginator";
 import { usePaginator } from "@/hooks/usePaginator";
 import { ReadonlyURLSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AttestationQueryRow } from "@/hooks/query/useAttestationQuery";
+import { SearchForm } from "./search-form";
 
 export interface AttestationsProps {
   attestations: AttestationQueryRow[]
@@ -37,15 +36,10 @@ export function Attestations({
       <h1 className="text-3xl font-bold">Attestations</h1>
 
       <div className="flex items-center justify-between">
-        <form className="flex items-center gap-2">
-          <Input
-            className="px-16"
-            name="search"
-            placeholder="UID, schema or resolver" />
-          <Button type="submit" variant="secondary">
-            Search
-          </Button>
-        </form>
+        <SearchForm
+          searchParams={searchParams}
+          placeholder="UID, schema, attester or recipient"
+        />
       </div>
 
       <Paginator prevHref={prevHref} nextHref={nextHref} pageCount={pageCount} page={page} />
