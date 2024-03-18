@@ -79,12 +79,12 @@ export const DEPLOYMENT = {
     chain: optimism,
     schemaRegistry: {
       address: optimismSchemaRegistry.address as Hash,
-      deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd',
+      deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd' as Hash,
       abi: optimismSchemaRegistry.abi as Abi
     },
     eas: {
       address: optimismEAS.address as Hash,
-      deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd',
+      deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd' as Hash,
       abi: optimismEAS.abi as Abi
     },
     blockBatchSize: 25000n,
