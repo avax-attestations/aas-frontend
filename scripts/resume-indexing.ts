@@ -42,11 +42,9 @@ async function runChain(chain: Chain) {
 
   const baseURL = `${opts.baseUrl.replace('/$', '')}/indexing/${normalizeChainName(chain)}`
 
-  if (chain !== 'OP Mainnet') {
-    await fetchFile(baseURL, 'index.db', outDir)
-    if (!fs.existsSync(`${outDir}/index.db`) && !opts.allowStartFromScratch) {
-      throw new Error('Failed to download index.db (if starting from scratch, pass --allow-start-from-scratch)')
-    }
+  await fetchFile(baseURL, 'index.db', outDir)
+  if (!fs.existsSync(`${outDir}/index.db`) && !opts.allowStartFromScratch) {
+    throw new Error('Failed to download index.db (if starting from scratch, pass --allow-start-from-scratch)')
   }
 
   await fetchFile(baseURL, 'index.json', outDir)
