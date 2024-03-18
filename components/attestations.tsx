@@ -38,7 +38,7 @@ export function Attestations({
       <div className="flex items-center justify-between">
         <SearchForm
           searchParams={searchParams}
-          placeholder="UID, schema, attester or recipient"
+          placeholder="UID, schema UID, attester or recipient"
         />
       </div>
 

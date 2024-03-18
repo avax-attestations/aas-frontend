@@ -38,14 +38,26 @@ export function useAttestationQuery({
     searchParams
   })
 
+  const searchStr = (searchParams.get('search') ?? '').trim()
+
   const attestations = useLiveQuery(
-    () => db.attestations
-      .orderBy('id')
-      .reverse()
-      .offset((page - 1) * pageSize)
-      .limit(pageSize)
-      .toArray()
-    , [db, page])
+    () => searchStr ?
+      db.attestations
+        .where('uid').startsWithIgnoreCase(searchStr)
+        .or('attester').startsWithIgnoreCase(searchStr)
+        .or('recipient').startsWithIgnoreCase(searchStr)
+        .or('schemaId').startsWithIgnoreCase(searchStr)
+        .reverse()
+        .offset((page - 1) * pageSize)
+        .limit(pageSize)
+        .sortBy('id') :
+      db.attestations
+        .orderBy('id')
+        .reverse()
+        .offset((page - 1) * pageSize)
+        .limit(pageSize)
+        .toArray()
+    , [db, page, searchStr])
 
   const schemas = useLiveQuery(
     () => db.schemas

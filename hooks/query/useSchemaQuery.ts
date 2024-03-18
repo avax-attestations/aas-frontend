@@ -37,14 +37,25 @@ export function useSchemaQuery({
     searchParams
   })
 
+  const searchStr = (searchParams.get('search') ?? '').trim()
+
   const schemas = (useLiveQuery(
-    () => db.schemas
-      .orderBy('id')
-      .reverse()
-      .offset((page - 1) * pageSize)
-      .limit(pageSize)
-      .toArray()
-    , [db, page]) ?? []).map(s => ({ ...s, id: s.id ?? -1 }))
+    () => searchStr ?
+      db.schemas
+        .where('name').startsWithIgnoreCase(searchStr)
+        .or('uid').startsWithIgnoreCase(searchStr)
+        .or('resolver').startsWithIgnoreCase(searchStr)
+        .reverse()
+        .offset((page - 1) * pageSize)
+        .limit(pageSize)
+        .sortBy('id') :
+      db.schemas
+        .orderBy('id')
+        .reverse()
+        .offset((page - 1) * pageSize)
+        .limit(pageSize)
+        .toArray()
+    , [db, page, searchStr]) ?? []).map(s => ({ ...s, id: s.id ?? -1 }))
 
   return {
     schemas,
