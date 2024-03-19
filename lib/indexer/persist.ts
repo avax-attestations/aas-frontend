@@ -1,6 +1,7 @@
 import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Mutations, computeMutations } from '@/lib/indexer/query';
 import { Database } from '@/lib/db';
+import pako from 'pako'
 import { type PublicClient } from 'viem';
 import { normalizeChainName, sleep } from '@/lib/utils';
 
@@ -44,13 +45,33 @@ function getIndexingURL(chain: Chain, basePath: string) {
   return `${basePath}/indexing/${normalizeChainName(chain)}`
 }
 
-export async function resume(chain: Chain, db: Database, basePath: string) {
-  const baseURL = getIndexingURL(chain, basePath)
-  const response = await fetch(`${baseURL}/index.json`, { cache: 'no-store' })
-  if (response.status >= 400) {
-    return
+async function fetchJsonGzip(url: string, requestInit?: RequestInit) {
+  const response = await fetch(`${url}.gz`, requestInit)
+  if (!response.ok) {
+    return null
+  }
+  const ab = await response.arrayBuffer()
+  const data = pako.inflate(new Uint8Array(ab), { to: 'string' })
+  return JSON.parse(data)
+}
+
+async function fetchJson(url: string, requestInit?: RequestInit) {
+  const inflated = await fetchJsonGzip(url, requestInit)
+  if (inflated) {
+    return inflated
+  }
+  // If the .gz file does not exist, try the uncompressed version
+  const response = await fetch(url, requestInit)
+  if (!response.ok) {
+    console.warn(`Failed to fetch ${url}: ${response.statusText}`)
   }
   const data = await response.json()
+  return data
+}
+
+export async function resume(chain: Chain, db: Database, basePath: string) {
+  const baseURL = getIndexingURL(chain, basePath)
+  const data = await fetchJson(`${baseURL}/index.json`, { cache: 'no-store' })
 
   const lastCheckpoint = ((await db.properties.get('lastCheckpoint')) ?? { value: '' }).value
   const nextBlock = ((await db.properties.get('nextBlock')) ?? { value: 0 }).value
@@ -63,12 +84,7 @@ export async function resume(chain: Chain, db: Database, basePath: string) {
 
 async function processCheckpoint(db: Database, checkpoint: any, baseURL: string, nextBlock: number) {
   console.log(`Processing checkpoint ${checkpoint.hash}...`)
-  const response = await fetch(`${baseURL}/${checkpoint.hash}.json`)
-  if (response.status >= 400) {
-    console.error(`Failed to fetch checkpoint ${checkpoint.hash}`)
-    return
-  }
-  const data = await response.json()
+  const data = await fetchJson(`${baseURL}/${checkpoint.hash}.json`)
   await db.transaction('rw', db.properties, db.schemas, db.attestations, db.timestamps, async () => {
     await persist(db, data, nextBlock)
     console.log('Updating latest block to', checkpoint.max)

@@ -114,9 +114,10 @@ async function index() {
   })();
 
 
+  let shouldExit = false
   process.on('SIGUSR1', () => {
     console.log(`${new Date().toISOString()} - ${deployment.chain.name} - Received SIGUSR1, exiting`)
-    process.exit(1)
+    shouldExit = true
   })
 
   const client = createPublicClient({
@@ -126,7 +127,7 @@ async function index() {
 
   const delay = DEPLOYMENT[chainName].delayBetweenRPCRequests
 
-  while (true) {
+  while (!shouldExit) {
     const [fetched, nextBlock, mutations] = await computeMutations(
       chainName, client, (await getNextBlock()), {
       getSchema,

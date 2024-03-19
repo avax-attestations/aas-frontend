@@ -17,11 +17,15 @@ import sepoliaEAS from '@ethereum-attestation-service/eas-contracts/deployments/
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
 
-const devChains: [ViemChain, ...ViemChain[]] = [
-  hardhat
+const prodChains: [ViemChain, ...ViemChain[]] = [
+  mainnet,
+  arbitrum,
+  sepolia,
+  avalancheFuji
 ]
 
-const prodChains: [ViemChain, ...ViemChain[]] = [
+const devChains: [ViemChain, ...ViemChain[]] = [
+  hardhat,
   mainnet,
   arbitrum,
   sepolia,

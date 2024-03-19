@@ -17,7 +17,7 @@ const opts = parsed.opts()
 
 const streamPipeline = promisify(pipeline);
 
-async function fetchFile(baseURL: string, filename: string, outDir: string) {
+async function fetchRawFile(baseURL: string, filename: string, outDir: string) {
   const url = `${baseURL}/${filename}`
   const outPath = path.join(outDir, filename)
   const tmpPath = `${outPath}.tmp`
@@ -26,15 +26,49 @@ async function fetchFile(baseURL: string, filename: string, outDir: string) {
 
   if (!response.ok || response.body === null) {
     console.error(`Failed to download ${url}: ${response.statusText}`);
-    return Promise.resolve(null);
+    return false;
   }
 
   await streamPipeline(response.body as any, fs.createWriteStream(tmpPath));
   fs.renameSync(tmpPath, outPath);
   console.log(`downloaded ${url} to ${outPath}`);
+  return true
 }
 
-async function runChain(chain: Chain) {
+async function invokeProcess(
+  executable: string,
+  args: string[],
+  timeoutSeconds?: number,
+  killSignal?: NodeJS.Signals
+) {
+  const process = cp.spawn(executable, args, { stdio: 'inherit' })
+
+  if (timeoutSeconds) {
+    setTimeout(() => {
+      process.kill(killSignal)
+    }, timeoutSeconds * 1000)
+  }
+
+  const exitPromise = new Promise((resolve) => {
+    process.on('exit', resolve)
+  })
+  return exitPromise
+}
+
+async function fetchFile(baseURL: string, filename: string, outDir: string) {
+  // first try to download the .gz file
+  const result = await fetchRawFile(baseURL, `${filename}.gz`, outDir)
+  // if it worked, invoke gunzip to decompress it
+  if (result) {
+    await invokeProcess('gunzip', ['-vf', `${outDir}/${filename}.gz`])
+    return
+  }
+
+  // Didn't work, try to download the uncompressed file
+  await fetchRawFile(baseURL, filename, outDir)
+}
+
+async function indexChain(chain: Chain) {
   const outDir = `./out/indexing/${normalizeChainName(chain)}`
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true })
@@ -48,43 +82,48 @@ async function runChain(chain: Chain) {
   }
 
   await fetchFile(baseURL, 'index.json', outDir)
-  const indexJson = (() => {
+  const oldIndexJson = (() => {
     try {
       return JSON.parse(fs.readFileSync(`${outDir}/index.json`, 'utf-8'))
     } catch (e) {
-      console.error(`Failed to parse index.json for "${chain}"`, e)
+      console.error(`Failed to parse old index.json for "${chain}"`, e)
       return []
     }
   })()
 
-  for (const checkpoint of indexJson) {
-    await fetchFile(baseURL, `${checkpoint.hash}.json`, outDir)
+  const checkpointsFetch = []
+  for (const checkpoint of oldIndexJson) {
+    checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir))
   }
-  // await Promise.all(checkpointsFetch)
-  // const checkpointsFetch = []
-  // for (const checkpoint of indexJson) {
-  //   checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir))
-  // }
-  // await Promise.all(checkpointsFetch)
+  await Promise.all(checkpointsFetch)
 
-  const indexingProcess = cp.spawn(process.execPath, ['indexer.js', '-c', chain, outDir], {
-    stdio: 'inherit'
-  })
+  await invokeProcess('node', ['indexer.js', '-c', chain, outDir], 50 * 60, 'SIGUSR1')
 
-  const timeoutSeconds = 45 * 60  // kill after 45 minutes
-  setTimeout(() => {
-    console.log(`Killing indexing process for "${chain}" after ${timeoutSeconds} seconds`)
-    indexingProcess.kill('SIGUSR1')
-  }, timeoutSeconds * 1000)
+  // re-read index.json
+  const newIndexJson = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(`${outDir}/index.json`, 'utf-8'))
+    } catch (e) {
+      console.error(`Failed to parse new index.json for "${chain}"`, e)
+      return []
+    }
+  })()
 
-  // Since we have already downloaded the previous checkout,
-  // we don't care if the indexing job fails, just wait for it to finish.
-  // Failures are common since RPC endpoints might rate limit our IP.
-  const exitPromise = new Promise((resolve) => {
-    indexingProcess.on('exit', resolve)
-  })
+  // compress all checkpoint files
+  const compressions = []
+  for (const checkpoint of newIndexJson) {
+    compressions.push(invokeProcess('gzip', ['-vf', `${outDir}/${checkpoint.hash}.json`]))
+  }
 
-  return exitPromise
+  // compress index.json
+  compressions.push(invokeProcess('gzip', ['-vf', `${outDir}/index.json`]))
+  // compress index.db
+  compressions.push(invokeProcess('gzip', ['-vf', `${outDir}/index.db`]))
+
+  await Promise.all(compressions)
+
+  // cleanup old uncompressed checkpoint files
+  await invokeProcess('find', [outDir, '-type', 'f', '-name', '*.json', '-delete'])
 }
 
 async function run() {
@@ -92,7 +131,7 @@ async function run() {
 
   for (const key of Object.keys(DEPLOYMENT)) {
     if (key !== 'Hardhat') {
-      promises.push(runChain(key as Chain))
+      promises.push(indexChain(key as Chain))
     }
   }
 
