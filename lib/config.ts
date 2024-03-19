@@ -88,7 +88,7 @@ export const DEPLOYMENT = {
       abi: optimismEAS.abi as Abi
     },
     blockBatchSize: 32n,
-    delayBetweenRPCRequests: 0,
+    delayBetweenRPCRequests: 200,
     transportFactory: () => {
       return http(undefined, {
         batch: {
