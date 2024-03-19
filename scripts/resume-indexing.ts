@@ -55,12 +55,14 @@ async function invokeProcess(
   return exitPromise
 }
 
-async function fetchFile(baseURL: string, filename: string, outDir: string) {
+async function fetchFile(baseURL: string, filename: string, outDir: string, decompress: boolean) {
   // first try to download the .gz file
   const result = await fetchRawFile(baseURL, `${filename}.gz`, outDir)
   // if it worked, invoke gunzip to decompress it
   if (result) {
-    await invokeProcess('gunzip', ['-vf', `${outDir}/${filename}.gz`])
+    if (decompress) {
+      await invokeProcess('gunzip', ['-vf', `${outDir}/${filename}.gz`])
+    }
     return
   }
 
@@ -76,12 +78,12 @@ async function indexChain(chain: Chain) {
 
   const baseURL = `${opts.baseUrl.replace('/$', '')}/indexing/${normalizeChainName(chain)}`
 
-  await fetchFile(baseURL, 'index.db', outDir)
+  await fetchFile(baseURL, 'index.db', outDir, true)
   if (!fs.existsSync(`${outDir}/index.db`) && !opts.allowStartFromScratch) {
     throw new Error('Failed to download index.db (if starting from scratch, pass --allow-start-from-scratch)')
   }
 
-  await fetchFile(baseURL, 'index.json', outDir)
+  await fetchFile(baseURL, 'index.json', outDir, true)
   const oldIndexJson = (() => {
     try {
       return JSON.parse(fs.readFileSync(`${outDir}/index.json`, 'utf-8'))
@@ -93,11 +95,11 @@ async function indexChain(chain: Chain) {
 
   const checkpointsFetch = []
   for (const checkpoint of oldIndexJson) {
-    checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir))
+    checkpointsFetch.push(fetchFile(baseURL, `${checkpoint.hash}.json`, outDir, false))
   }
   await Promise.all(checkpointsFetch)
 
-  await invokeProcess('node', ['indexer.js', '-c', chain, outDir], 50 * 60, 'SIGUSR1')
+  await invokeProcess('node', ['indexer.js', '-c', chain, outDir], 15 * 60, 'SIGUSR1')
 
   // re-read index.json
   const newIndexJson = (() => {
@@ -112,7 +114,11 @@ async function indexChain(chain: Chain) {
   // compress all checkpoint files
   const compressions = []
   for (const checkpoint of newIndexJson) {
-    compressions.push(invokeProcess('gzip', ['-vf', `${outDir}/${checkpoint.hash}.json`]))
+    const fpath = `${outDir}/${checkpoint.hash}.json`
+    const compressedFpath = `${fpath}.gz`
+    if (!fs.existsSync(compressedFpath)) {
+      compressions.push(invokeProcess('gzip', ['-vf', fpath]))
+    }
   }
 
   // compress index.json
