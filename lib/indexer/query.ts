@@ -55,6 +55,7 @@ async function getEventsInBlockRangeRetry(
         await sleep(5000)
       } else {
         console.error(`${new Date().toISOString()} - ${chain} - Error fetching events between blocks ${from} and ${to}, will retry a lower range`);
+        await sleep(5000)
       }
     }
   }
