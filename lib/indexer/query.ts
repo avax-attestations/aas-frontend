@@ -135,7 +135,7 @@ export async function computeMutations(
   })();
 
   let currentBlock = fromBlock;
-  const block = await client.getBlock({ blockTag: 'latest' });
+  const block = await getLatestBlock(client);
   const latestBlock = block.number;
 
   if (currentBlock > latestBlock) {
@@ -294,6 +294,22 @@ async function getSchema(client: PublicClient, uid: string): Promise<SchemaRecor
     } catch (err) {
       remainingTries--
       console.error(`${new Date().toISOString()} - ${chain} - Error fetching schema ${uid}, will retry ${remainingTries} more times`);
+      if (remainingTries === 0) {
+        throw err
+      }
+      await sleep(5000)
+    }
+  }
+}
+
+async function getLatestBlock(client: PublicClient) {
+  let remainingTries = 10;
+  while (true) {
+    try {
+      return await client.getBlock({ blockTag: 'latest' })
+    } catch (err) {
+      remainingTries--
+      console.error(`${new Date().toISOString()} - Error fetching latest block, will retry ${remainingTries} more times`);
       if (remainingTries === 0) {
         throw err
       }
