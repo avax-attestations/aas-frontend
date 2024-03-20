@@ -225,30 +225,9 @@ type SchemaRecord = {
 }
 
 async function handleSchemaRegisteredEvent(event: Event, client: PublicClient, schemaCache: Record<string, Schema>): Promise<Mutations> {
-  if (!client.chain) {
-    throw new Error('invalid chain')
-  }
-  const chain = client.chain.name as Chain;
-
-  const schemaContract = getContract({
-    address: DEPLOYMENT[chain].schemaRegistry.address,
-    abi: DEPLOYMENT[chain].schemaRegistry.abi,
-    client
-  })
   const args = event.decodedEvent.args as any;
 
-  const schemaRecord = await (async () => {
-    let tries = 1;
-
-    while (true) {
-      const schemaRecord = await schemaContract.read.getSchema([args.uid]) as SchemaRecord
-      if (schemaRecord.uid !== zeroHash) {
-        return schemaRecord
-      }
-      console.log(`Delaying schema poll after try #${tries++}...`);
-      await sleep(500)
-    }
-  })()
+  const schemaRecord = await getSchema(client, args.uid)
 
   const schema = {
     uid: schemaRecord.uid,
@@ -291,8 +270,37 @@ interface AttestationRecord {
   data: string
 }
 
-async function handleAttestedEvent(event: Event, client: PublicClient, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
+async function getSchema(client: PublicClient, uid: string): Promise<SchemaRecord> {
+  if (!client.chain) {
+    throw new Error('invalid chain')
+  }
+  const chain = client.chain.name as Chain;
 
+  const schemaContract = getContract({
+    address: DEPLOYMENT[chain].schemaRegistry.address,
+    abi: DEPLOYMENT[chain].schemaRegistry.abi,
+    client
+  })
+
+  let tries = 1;
+  while (true) {
+    try {
+      const schemaRecord = await schemaContract.read.getSchema([uid]) as SchemaRecord
+      if (schemaRecord.uid !== zeroHash) {
+        return schemaRecord
+      }
+      await sleep(1000)
+    } catch (err) {
+      tries++
+      if (tries > 10) {
+        throw err
+      }
+      await sleep(5000)
+    }
+  }
+}
+
+async function getAttestation(client: PublicClient, uid: string): Promise<AttestationRecord> {
   if (!client.chain) {
     throw new Error('invalid chain')
   }
@@ -303,23 +311,28 @@ async function handleAttestedEvent(event: Event, client: PublicClient, db: Datab
     abi: DEPLOYMENT[chain].eas.abi,
     client
   })
-  const args = event.decodedEvent.args as any
-  let attestation: AttestationRecord
-
 
   let tries = 1;
   while (true) {
-    const result = await eas.read.getAttestation([args.uid]) as AttestationRecord
-
-    if (result.uid !== zeroHash) {
-      attestation = result;
-      break;
+    try {
+      const attestationRecord = await eas.read.getAttestation([uid]) as AttestationRecord
+      if (attestationRecord.uid !== zeroHash) {
+        return attestationRecord
+      }
+      await sleep(1000)
+    } catch (err) {
+      tries++
+      if (tries > 10) {
+        throw err
+      }
+      await sleep(5000)
     }
-
-    console.log(`Could not find attestation with uid "${args.uid}", retry #${tries} after 500 milliseconds...`)
-    await sleep(500)
-    tries++
   }
+}
+
+async function handleAttestedEvent(event: Event, client: PublicClient, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
+  const args = event.decodedEvent.args as any
+  const attestation = await getAttestation(client, args.uid)
 
   const schema = await (async () => {
     if (schemaCache[attestation.schema]) {
@@ -411,33 +424,8 @@ async function handleAttestedEvent(event: Event, client: PublicClient, db: Datab
 }
 
 async function handleRevokedEvent(event: Event, client: PublicClient): Promise<Mutations> {
-  if (!client.chain) {
-    throw new Error('invalid chain')
-  }
-  const chain = client.chain.name as Chain;
-
-  const eas = getContract({
-    address: DEPLOYMENT[chain].eas.address,
-    abi: DEPLOYMENT[chain].eas.abi,
-    client
-  })
   const args = event.decodedEvent.args as any
-  let attestation: AttestationRecord
-
-
-  let tries = 1;
-  while (true) {
-    const result = await eas.read.getAttestation([args.uid]) as AttestationRecord
-
-    if (result.uid !== zeroHash) {
-      attestation = result;
-      break;
-    }
-
-    console.log(`Could not find attestation with uid "${args.uid}", retry #${tries} after 500 milliseconds...`)
-    await sleep(500)
-    tries++
-  }
+  const attestation = await getAttestation(client, args.uid)
 
   const result = [{
     operation: 'modify',
