@@ -99,7 +99,7 @@ async function indexChain(chain: Chain) {
   }
   await Promise.all(checkpointsFetch)
 
-  await invokeProcess('node', ['indexer.js', '-c', chain, outDir], 15 * 60, 'SIGUSR1')
+  await invokeProcess('node', ['indexer.js', '-c', chain, outDir], 50 * 60, 'SIGUSR1')
 
   // re-read index.json
   const newIndexJson = (() => {
