@@ -16,6 +16,8 @@ function getEventFromAbi(abi: Abi, eventName: string) {
   return event as AbiEvent;
 }
 
+const backoffDelay = 15000;
+
 // Fetch events in a block range, retrying with half the range on failure
 // until the range is 1 block. If it fails with a range of 1 block,
 // the exception will be propagated.
@@ -52,10 +54,10 @@ async function getEventsInBlockRangeRetry(
         if (remainingTries === 0) {
           throw err
         }
-        await sleep(5000)
+        await sleep(backoffDelay)
       } else {
         console.error(`${new Date().toISOString()} - ${chain} - Error fetching events between blocks ${from} and ${to}, will retry a lower range`);
-        await sleep(5000)
+        await sleep(backoffDelay)
       }
     }
   }
@@ -297,7 +299,7 @@ async function getSchema(client: PublicClient, uid: string): Promise<SchemaRecor
       if (remainingTries === 0) {
         throw err
       }
-      await sleep(5000)
+      await sleep(backoffDelay)
     }
   }
 }
@@ -313,7 +315,7 @@ async function getLatestBlock(client: PublicClient) {
       if (remainingTries === 0) {
         throw err
       }
-      await sleep(5000)
+      await sleep(backoffDelay)
     }
   }
 }
@@ -344,7 +346,7 @@ async function getAttestation(client: PublicClient, uid: string): Promise<Attest
       if (remainingTries === 0) {
         throw err
       }
-      await sleep(5000)
+      await sleep(backoffDelay)
     }
   }
 }
