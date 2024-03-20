@@ -282,7 +282,7 @@ async function getSchema(client: PublicClient, uid: string): Promise<SchemaRecor
     client
   })
 
-  let tries = 1;
+  let remainingTries = 10;
   while (true) {
     try {
       const schemaRecord = await schemaContract.read.getSchema([uid]) as SchemaRecord
@@ -291,8 +291,9 @@ async function getSchema(client: PublicClient, uid: string): Promise<SchemaRecor
       }
       await sleep(1000)
     } catch (err) {
-      tries++
-      if (tries > 10) {
+      remainingTries--
+      console.error(`${new Date().toISOString()} - ${chain} - Error fetching schema ${uid}, will retry ${remainingTries} more times`);
+      if (remainingTries === 0) {
         throw err
       }
       await sleep(5000)
@@ -312,7 +313,7 @@ async function getAttestation(client: PublicClient, uid: string): Promise<Attest
     client
   })
 
-  let tries = 1;
+  let remainingTries = 10;
   while (true) {
     try {
       const attestationRecord = await eas.read.getAttestation([uid]) as AttestationRecord
@@ -321,8 +322,9 @@ async function getAttestation(client: PublicClient, uid: string): Promise<Attest
       }
       await sleep(1000)
     } catch (err) {
-      tries++
-      if (tries > 10) {
+      remainingTries--
+      console.error(`${new Date().toISOString()} - ${chain} - Error fetching attestation ${uid}, will retry ${remainingTries} more times`);
+      if (remainingTries === 0) {
         throw err
       }
       await sleep(5000)
