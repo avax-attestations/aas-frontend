@@ -95,14 +95,13 @@ export const DEPLOYMENT = {
     },
     blockBatchSize: 256n,
     delayBetweenRPCRequests: 100,
-    transportFactory: http
-    // transportFactory: () => {
-    //   return http('https://rpc.ankr.com/optimism', {
-    //     batch: {
-    //       wait: 0
-    //     }
-    //   })
-    // }
+    transportFactory: () => {
+      return http('https://rpc.ankr.com/optimism', {
+        batch: {
+          wait: 0
+        }
+      })
+    }
   },
   [sepolia.name]: {
     chain: sepolia,
