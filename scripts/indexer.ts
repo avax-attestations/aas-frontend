@@ -200,7 +200,7 @@ async function index() {
   index[index.length - 1].max = Number(await getNextBlock()) - 1
   const fname = `${outDir}/index.json`
   console.log('writing', fname)
-  writeAtomic(fname, JSON.stringify(index), true)
+  writeAtomic(fname, JSON.stringify(index), false)
 }
 
 index().then(() => {
