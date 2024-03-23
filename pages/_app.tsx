@@ -7,16 +7,8 @@ import Link from "next/link";
 import { ConnectKitButton } from 'connectkit';
 import { useIndexer } from "@/hooks/useIndexer";
 import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
-
-import {
-  Card, CardContent
-} from "@/components/ui/card"
+  Card
+} from "@/components/card"
 import { Toaster } from "@/components/ui/toaster";
 
 interface LayoutProps {
@@ -29,40 +21,36 @@ interface NavbarItemProps {
 }
 
 const NavbarItem: FC<NavbarItemProps> = ({ link, label }) => {
-  return (<NavigationMenuItem>
-    <Link href={link} legacyBehavior passHref>
-      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+  return (
+    <div className="link mr-10">
+      <Link href={link} legacyBehavior passHref>
         {label}
-      </NavigationMenuLink>
-    </Link>
-  </NavigationMenuItem>)
+      </Link>
+    </div>
+  )
 }
 
 const Layout: NextPage<LayoutProps> = ({ children }) => {
   useIndexer();
 
-  return <>
+  return <div className="p-6">
     <nav>
-      <Card className="max-w-5xl mx-auto mt-1">
-        <CardContent className="p-6 mx-auto flex items-center justify-between">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavbarItem link="/" label="Home" />
-              <NavbarItem link="/attestations" label="Attestations" />
-              <NavbarItem link="/schemas" label="Schemas" />
-            </NavigationMenuList>
-          </NavigationMenu>
-          <ConnectKitButton />
-        </CardContent>
+      <Card className="p-6 flex items-center justify-between">
+        <div className="flex flex-row items-center justify-between">
+          <NavbarItem link="/" label="Home" />
+          <NavbarItem link="/attestations" label="Attestations" />
+          <NavbarItem link="/schemas" label="Schemas" />
+        </div>
+        <ConnectKitButton />
       </Card>
     </nav>
     <main>
-      <div className="p-6 max-w-5xl mx-auto space-y-4">
+      <div className="mt-6">
         {children}
       </div>
     </main>
     <Toaster />
-  </>
+  </div>
 }
 
 export default function App({ Component, pageProps }: AppProps) {

@@ -4,7 +4,7 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210,40%,98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -72,5 +72,8 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .link a {
+    @apply text-cyan-900 hover:text-cyan-600 hover:underline;
   }
 }

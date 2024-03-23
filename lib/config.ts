@@ -17,22 +17,19 @@ import sepoliaEAS from '@ethereum-attestation-service/eas-contracts/deployments/
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
 
-const prodChains: [ViemChain, ...ViemChain[]] = [
+const supportedChains = [
   mainnet,
   arbitrum,
   optimism,
   sepolia,
   avalancheFuji
-]
+] as ViemChain[]
 
-const devChains: [ViemChain, ...ViemChain[]] = [
+const prodChains = supportedChains as [ViemChain, ...ViemChain[]]
+
+const devChains = ([
   hardhat,
-  mainnet,
-  arbitrum,
-  optimism,
-  sepolia,
-  avalancheFuji
-]
+] as ViemChain[]).concat(supportedChains) as [ViemChain, ...ViemChain[]]
 
 export const NAME_SCHEMA_UID = '0x44d562ac1d7cd77e232978687fea027ace48f719cf1d58c7888e509663bb87fc'
 
