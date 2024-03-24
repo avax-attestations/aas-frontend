@@ -1,5 +1,4 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { truncateEllipsis } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, SquarePen } from "lucide-react";
 import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
@@ -47,13 +46,13 @@ export function Schemas({
           {schemas?.map(s => {
             const canEditName = !s.name && s.creator === walletAddress.toLowerCase();
             return (<TableRow className="h-24" key={s.id}>
-              <TableCell>
+              <TableCell className="w-1">
                 #{s.id}
               </TableCell>
-              <TableCell>
-                {truncateEllipsis(s.uid, 13)}
+              <TableCell className="long-text-cell">
+                {s.uid}
               </TableCell>
-              <TableCell>
+              <TableCell className="w-56">
                 {canEditName ? (
                   <Button
                     asChild
@@ -65,16 +64,16 @@ export function Schemas({
                   </Button>
                 ) : s.name}
               </TableCell>
-              <TableCell>
+              <TableCell className="w-64">
                 {s.schema}
               </TableCell>
-              <TableCell>
-                {truncateEllipsis(s.resolver, 20)}
+              <TableCell className="long-text-cell">
+                {s.resolver}
               </TableCell>
-              <TableCell align="center">
+              <TableCell align="center" className="w-4">
                 {s.attestationCount}
               </TableCell>
-              <TableCell align="center" >
+              <TableCell align="center" className="w-1">
                 <Button
                   asChild
                   variant="outline"

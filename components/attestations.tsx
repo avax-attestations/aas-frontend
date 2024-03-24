@@ -1,6 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { timeAgo, truncateEllipsis } from "@/lib/utils";
-import { ReadonlyURLSearchParams } from "next/navigation";
+import { timeAgo } from "@/lib/utils";
 import Link from "next/link";
 import { AttestationQueryRow } from "@/hooks/query/useAttestationQuery";
 
@@ -34,24 +33,22 @@ export function Attestations({ attestations }: AttestationsProps) {
         </TableHeader>
         <TableBody>
           {attestations.map(a => {
-            const truncatedUid = truncateEllipsis(a.uid, 13)
-
             return (<TableRow className="h-24" key={a.id}>
-              <TableCell className="link">
+              <TableCell className="link long-text-cell">
                 <Link href={`/attestation/${a.uid}`}>
-                  {a.revoked ? <s className="text-red-500">{truncatedUid}</s> : truncatedUid}
+                  {a.revoked ? <s className="text-red-500">{a.uid}</s> : a.uid}
                 </Link>
               </TableCell>
-              <TableCell>
+              <TableCell className="w-64">
                 #{a.schemaId} {a.schemaName ? `(${a.schemaName})` : ''}
               </TableCell>
-              <TableCell>
-                {truncateEllipsis(a.attester, 15)}
+              <TableCell className="long-text-cell">
+                {a.attester}
               </TableCell>
-              <TableCell>
-                {truncateEllipsis(a.recipient, 15)}
+              <TableCell className="long-text-cell">
+                {a.recipient}
               </TableCell>
-              <TableCell>
+              <TableCell className="w-32">
                 {timeAgo(a.time)}
               </TableCell>
             </TableRow>)

@@ -76,4 +76,7 @@
   .link a {
     @apply text-cyan-900 hover:text-cyan-600 hover:underline;
   }
+  .long-text-cell {
+    @apply overflow-hidden text-ellipsis max-w-24;
+  }
 }
