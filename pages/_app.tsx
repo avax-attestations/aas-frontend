@@ -33,15 +33,17 @@ const NavbarItem: FC<NavbarItemProps> = ({ link, label }) => {
 const Layout: NextPage<LayoutProps> = ({ children }) => {
   useIndexer();
 
-  return <div className="p-6">
+  return <div className="p-5">
     <nav>
-      <Card className="p-6 flex items-center justify-between">
-        <div className="flex flex-row items-center justify-between">
+      <Card className="p-5 flex flex-col-reverse sm:flex-row items-center justify-between">
+        <div className="flex flex-row items-center justify-between ">
           <NavbarItem link="/" label="Home" />
           <NavbarItem link="/attestations" label="Attestations" />
           <NavbarItem link="/schemas" label="Schemas" />
         </div>
-        <ConnectKitButton />
+        <div className="mb-5 sm:mb-0">
+          <ConnectKitButton />
+        </div>
       </Card>
     </nav>
     <main>

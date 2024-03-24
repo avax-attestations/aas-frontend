@@ -37,9 +37,9 @@ export function SearchForm({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 mt-3 sm:mt-0">
       <Input
-        className="px-4 w-96"
+        className="md:w-96"
         name="search"
         value={search}
         onKeyUp={(e) => {

@@ -33,10 +33,10 @@ export default function AttestationsPage() {
 
   return (
     <div>
-      <Card className="p-6 flex items-center justify-between">
+      <Card className="p-6 flex flex-col sm:flex-row items-center justify-between">
         <div className="flex flex-col text-center">
           <span className="text-2xl font-bold">{recordCount}</span>
-          <span className="ml-2 text-1xl">Attestations found</span>
+          <span className="sm:ml-2 text-1xl">Attestations found</span>
         </div>
 
         <div className="flex items-center justify-between">
