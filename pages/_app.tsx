@@ -33,8 +33,8 @@ const NavbarItem: FC<NavbarItemProps> = ({ link, label }) => {
 const Layout: NextPage<LayoutProps> = ({ children }) => {
   useIndexer();
 
-  return <div className="p-5">
-    <nav>
+  return <div>
+    <nav className="px-5 pt-5">
       <Card className="p-5 flex flex-col-reverse sm:flex-row items-center justify-between">
         <div className="flex flex-row items-center justify-between ">
           <NavbarItem link="/" label="Home" />
@@ -46,7 +46,7 @@ const Layout: NextPage<LayoutProps> = ({ children }) => {
         </div>
       </Card>
     </nav>
-    <main>
+    <main className="px-5 mx-auto max-w-6xl">
       <div className="mt-6">
         {children}
       </div>

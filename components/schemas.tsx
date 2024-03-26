@@ -4,6 +4,7 @@ import { PlusCircle, SquarePen } from "lucide-react";
 import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
 import Link from "next/link";
 import { SchemaQueryRow } from "@/hooks/query/useSchemaQuery";
+import { SchemaFieldsCard } from "./schema-fields-card";
 
 export interface SchemasProps {
   schemas: SchemaQueryRow[]
@@ -45,7 +46,7 @@ export function Schemas({
         <TableBody>
           {schemas?.map(s => {
             const canEditName = !s.name && s.creator === walletAddress.toLowerCase();
-            return (<TableRow className="h-24" key={s.id}>
+            return (<TableRow key={s.id}>
               <TableCell className="w-1">
                 #{s.id}
               </TableCell>
@@ -64,8 +65,8 @@ export function Schemas({
                   </Button>
                 ) : s.name}
               </TableCell>
-              <TableCell className="w-64">
-                {s.schema}
+              <TableCell className="w-80 p-2">
+                <SchemaFieldsCard schema={s.schema} />
               </TableCell>
               <TableCell className="long-text-cell">
                 {s.resolver}
