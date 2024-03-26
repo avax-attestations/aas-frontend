@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { timeAgo } from "@/lib/utils";
 import Link from "next/link";
 import { AttestationQueryRow } from "@/hooks/query/useAttestationQuery";
+import { SchemaNameCard } from "./schema-name-card";
 
 export interface AttestationsProps {
   attestations: AttestationQueryRow[]
@@ -39,8 +40,11 @@ export function Attestations({ attestations }: AttestationsProps) {
                   {a.revoked ? <s className="text-red-500">{a.uid}</s> : a.uid}
                 </Link>
               </TableCell>
-              <TableCell className="w-64">
-                #{a.schemaId} {a.schemaName ? `(${a.schemaName})` : ''}
+              <TableCell className="w-48">
+                <div className="flex flex-rows space-x-3">
+                  <span>#{a.schemaId}</span>
+                  {a.schemaName ? <SchemaNameCard name={a.schemaName} /> : ''}
+                </div>
               </TableCell>
               <TableCell className="long-text-cell">
                 {a.attester}

@@ -5,6 +5,7 @@ import { NAME_SCHEMA_UID as NAME_A_SCHEMA_UID } from "@/lib/config";
 import Link from "next/link";
 import { SchemaQueryRow } from "@/hooks/query/useSchemaQuery";
 import { SchemaFieldsCard } from "./schema-fields-card";
+import { SchemaNameCard } from "./schema-name-card";
 
 export interface SchemasProps {
   schemas: SchemaQueryRow[]
@@ -63,7 +64,7 @@ export function Schemas({
                       <SquarePen />
                     </Link>
                   </Button>
-                ) : s.name}
+                ) : <SchemaNameCard name={s.name} />}
               </TableCell>
               <TableCell className="w-80 p-2">
                 <SchemaFieldsCard schema={s.schema} />
