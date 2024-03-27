@@ -35,7 +35,7 @@ export function Attestations({ attestations }: AttestationsProps) {
         <TableBody>
           {attestations.map(a => {
             return (<TableRow key={a.id}>
-              <TableCell className="link long-text-cell">
+              <TableCell className="link-red long-text-cell">
                 <Link href={`/attestation/${a.uid}`}>
                   {a.revoked ? <s className="text-red-500">{a.uid}</s> : a.uid}
                 </Link>
