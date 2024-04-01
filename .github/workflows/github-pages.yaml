@@ -74,7 +74,7 @@ jobs:
           pages_url=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.html_url')
           echo "Github pages URL: $pages_url"
           node scripts/esbuild.js
-          node ./resume-indexing.js -b "$pages_url"
+          node ./resume-indexing.js -b "$pages_url" --allow-start-from-scratch
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

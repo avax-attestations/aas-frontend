@@ -1,4 +1,4 @@
-import { Chain as ViemChain, mainnet, arbitrum, optimism, sepolia, avalancheFuji, hardhat } from 'viem/chains';
+import { Chain as ViemChain, mainnet, arbitrum, optimism, sepolia, avalanche, avalancheFuji, hardhat } from 'viem/chains';
 import { http } from 'viem';
 import { Abi } from 'abitype';
 
@@ -14,6 +14,9 @@ import optimismEAS from '@ethereum-attestation-service/eas-contracts/deployments
 import sepoliaSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/SchemaRegistry.json'
 import sepoliaEAS from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/EAS.json'
 
+import avalancheSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/avalanche/SchemaRegistry.json'
+import avalancheEAS from '@ethereum-attestation-service/eas-contracts/deployments/avalanche/EAS.json'
+
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
 
@@ -22,6 +25,7 @@ const supportedChains = [
   arbitrum,
   optimism,
   sepolia,
+  avalanche,
   avalancheFuji
 ] as ViemChain[]
 
@@ -122,6 +126,22 @@ export const DEPLOYMENT = {
       })
     }
 
+  },
+  [avalanche.name]: {
+    chain: avalanche,
+    schemaRegistry: {
+      address: avalancheSchemaRegistry.address as Hash,
+      deploymentTxn: avalancheSchemaRegistry.transactionHash as Hash,
+      abi: avalancheSchemaRegistry.abi as Abi
+    },
+    eas: {
+      address: avalancheEAS.address as Hash,
+      deploymentTxn: avalancheEAS.transactionHash as Hash,
+      abi: avalancheEAS.abi as Abi
+    },
+    blockBatchSize: 2048n,
+    delayBetweenRPCRequests: 0,
+    transportFactory: () => http()
   },
   [avalancheFuji.name]: {
     chain: avalancheFuji,
