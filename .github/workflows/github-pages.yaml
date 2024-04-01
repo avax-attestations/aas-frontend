@@ -30,17 +30,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v3
-        id: pnpm-install
-        with:
-          version: 8
-          run_install: false
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: pnpm
+          cache: yarn
       - name: Setup Pages
         uses: actions/configure-pages@v4
         with:
@@ -56,16 +50,16 @@ jobs:
           path: |
             .next/cache
           # Generate a new cache whenever packages or source files change.
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: yarn install --frozen-lockfile
       - name: Run tests
-        run: pnpm test
+        run: yarn test
       - name: Build with Next.js
-        run: pnpm next build
+        run: yarn next build
       - name: Run indexing jobs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -74,7 +68,7 @@ jobs:
           pages_url=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.html_url')
           echo "Github pages URL: $pages_url"
           node scripts/esbuild.js
-          node ./resume-indexing.js -b "$pages_url" --allow-start-from-scratch
+          node ./resume-indexing.js -b "$pages_url"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
