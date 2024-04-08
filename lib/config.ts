@@ -1,18 +1,6 @@
-import { Chain as ViemChain, mainnet, arbitrum, optimism, sepolia, avalanche, avalancheFuji, hardhat } from 'viem/chains';
+import { Chain as ViemChain, avalanche, avalancheFuji, hardhat } from 'viem/chains';
 import { http } from 'viem';
 import { Abi } from 'abitype';
-
-import mainnetSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/mainnet/SchemaRegistry.json'
-import mainnetEAS from '@ethereum-attestation-service/eas-contracts/deployments/mainnet/EAS.json'
-
-import arbitrumSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/SchemaRegistry.json'
-import arbitrumEAS from '@ethereum-attestation-service/eas-contracts/deployments/arbitrum-one/EAS.json'
-
-import optimismSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/optimism/SchemaRegistry.json'
-import optimismEAS from '@ethereum-attestation-service/eas-contracts/deployments/optimism/EAS.json'
-
-import sepoliaSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/SchemaRegistry.json'
-import sepoliaEAS from '@ethereum-attestation-service/eas-contracts/deployments/sepolia/EAS.json'
 
 import avalancheSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/avalanche/SchemaRegistry.json'
 import avalancheEAS from '@ethereum-attestation-service/eas-contracts/deployments/avalanche/EAS.json'
@@ -21,10 +9,6 @@ import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/depl
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
 
 const supportedChains = [
-  mainnet,
-  arbitrum,
-  optimism,
-  sepolia,
   avalanche,
   avalancheFuji
 ] as ViemChain[]
@@ -44,89 +28,6 @@ export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PR
 type Hash = `0x${string}`
 
 export const DEPLOYMENT = {
-  [mainnet.name]: {
-    chain: mainnet,
-    schemaRegistry: {
-      address: mainnetSchemaRegistry.address as Hash,
-      deploymentTxn: mainnetSchemaRegistry.transactionHash as Hash,
-      abi: mainnetSchemaRegistry.abi as Abi
-    },
-    eas: {
-      address: mainnetEAS.address as Hash,
-      deploymentTxn: mainnetEAS.transactionHash as Hash,
-      abi: mainnetEAS.abi as Abi
-    },
-    blockBatchSize: 512n,
-    delayBetweenRPCRequests: 1000,
-    transportFactory: () => http()
-  },
-  [arbitrum.name]: {
-    chain: arbitrum,
-    schemaRegistry: {
-      address: arbitrumSchemaRegistry.address as Hash,
-      deploymentTxn: arbitrumSchemaRegistry.transactionHash as Hash,
-      abi: arbitrumSchemaRegistry.abi as Abi
-    },
-    eas: {
-      address: arbitrumEAS.address as Hash,
-      deploymentTxn: arbitrumEAS.transactionHash as Hash,
-      abi: arbitrumEAS.abi as Abi
-    },
-    blockBatchSize: 131072n,
-    delayBetweenRPCRequests: 0,
-    transportFactory: () => {
-      return http(undefined, {
-        batch: {
-          wait: 0
-        }
-      })
-    }
-  },
-  [optimism.name]: {
-    chain: optimism as unknown as typeof arbitrum,
-    schemaRegistry: {
-      address: optimismSchemaRegistry.address as Hash,
-      deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd' as Hash,
-      abi: optimismSchemaRegistry.abi as Abi
-    },
-    eas: {
-      address: optimismEAS.address as Hash,
-      deploymentTxn: '0xffee154ed11ab8df29739104900f22450bec3e85790c01a632f04b0056cb92fd' as Hash,
-      abi: optimismEAS.abi as Abi
-    },
-    blockBatchSize: 256n,
-    delayBetweenRPCRequests: 100,
-    transportFactory: () => {
-      return http('https://rpc.ankr.com/optimism', {
-        batch: {
-          wait: 0
-        }
-      })
-    }
-  },
-  [sepolia.name]: {
-    chain: sepolia,
-    schemaRegistry: {
-      address: sepoliaSchemaRegistry.address as Hash,
-      deploymentTxn: sepoliaSchemaRegistry.transactionHash as Hash,
-      abi: sepoliaSchemaRegistry.abi as Abi
-    },
-    eas: {
-      address: sepoliaEAS.address as Hash,
-      deploymentTxn: sepoliaEAS.transactionHash as Hash,
-      abi: sepoliaEAS.abi as Abi
-    },
-    blockBatchSize: 2048n,
-    delayBetweenRPCRequests: 0,
-    transportFactory: () => {
-      return http('https://rpc-sepolia.rockx.com/', {
-        batch: {
-          wait: 0
-        }
-      })
-    }
-
-  },
   [avalanche.name]: {
     chain: avalanche,
     schemaRegistry: {
