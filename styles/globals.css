@@ -71,15 +71,23 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* @apply bg-background text-foreground; */
+
+    @apply bg-[#eaeaea];
+
+    /* --background: 0,0%,92%, 1; */
   }
   .link-red a {
     @apply text-red-700 hover:text-red-600 hover:underline;
   }
-  .link a {
-    @apply hover:text-red-600 font-semibold;
+  .menu-selected {
+    @apply rounded-full bg-[#333333] text-[#eaeaea] m-2 p-3;
   }
   .long-text-cell {
     @apply overflow-hidden text-ellipsis max-w-24;
   }
+  .menu {
+    @apply font-['Barlow'] font-semibold tracking-wider;
+  }
 }
+

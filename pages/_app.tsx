@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import Image from "next/image";
 import type { AppProps } from "next/app";
 import { Web3Provider } from "@/providers/web3-provider";
 import { NextPage } from "next";
@@ -10,6 +11,7 @@ import {
   Card
 } from "@/components/card"
 import { Toaster } from "@/components/ui/toaster";
+import { useRouter } from "next/router";
 
 interface LayoutProps {
   children?: ReactNode;
@@ -18,11 +20,12 @@ interface LayoutProps {
 interface NavbarItemProps {
   link: string
   label: string
+  selected: string
 }
 
-const NavbarItem: FC<NavbarItemProps> = ({ link, label }) => {
+const NavbarItem: FC<NavbarItemProps> = ({ link, label, selected }) => {
   return (
-    <div className="link mr-10">
+    <div className={"p-3" + (selected === link ? " menu-selected" : "")}>
       <Link href={link} legacyBehavior passHref>
         {label}
       </Link>
@@ -32,19 +35,31 @@ const NavbarItem: FC<NavbarItemProps> = ({ link, label }) => {
 
 const Layout: NextPage<LayoutProps> = ({ children }) => {
   useIndexer();
+  const { pathname: current } = useRouter();
+  const paths = [
+    { pathname: '/attestations', label: 'Attestations' },
+    { pathname: '/schemas', label: 'Schemas' },
+  ];
 
   return <div>
     <nav className="px-5 pt-5">
-      <Card className="p-5 flex flex-col-reverse sm:flex-row items-center justify-between">
-        <div className="flex flex-row items-center justify-between ">
-          <NavbarItem link="/" label="Home" />
-          <NavbarItem link="/attestations" label="Attestations" />
-          <NavbarItem link="/schemas" label="Schemas" />
+      <div className="p-5 flex flex-col-reverse sm:flex-row items-center justify-between">
+        <div>
+          <Image src="/images/aas-logo.png" alt="Logo" width={70} height={70} />
+        </div>
+        <div className="flex flex-row items-center justify-between menu">
+          {paths.map(({ pathname, label }) => (
+            <NavbarItem
+              key={pathname}
+              link={pathname}
+              label={label}
+              selected={current} />
+          ))}
         </div>
         <div className="mb-5 sm:mb-0">
           <ConnectKitButton />
         </div>
-      </Card>
+      </div>
     </nav>
     <main className="px-5 mx-auto max-w-6xl">
       <div className="mt-6">
@@ -64,3 +79,5 @@ export default function App({ Component, pageProps }: AppProps) {
     </Web3Provider>
   );
 }
+
+

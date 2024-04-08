@@ -3,7 +3,6 @@ import { useWalletClient } from "wagmi";
 import { Schemas } from "@/components/schemas";
 import { useSchemaQuery } from "@/hooks/query/useSchemaQuery";
 import { Paginator } from "@/components/paginator";
-import { Card } from "@/components/card";
 import { getPage, usePaginator } from "@/hooks/usePaginator";
 import { SearchForm } from "@/components/search-form";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ export default function SchemasPage() {
 
   return (
     <div>
-      <Card className="p-6 flex flex-col sm:flex-row items-center justify-between">
+      <div className="p-6 flex flex-col sm:flex-row items-center justify-between">
         <div className="flex flex-col text-center">
           <span className="text-2xl font-bold">{recordCount}</span>
           <span className="sm:ml-2 text-1xl">Schemas found</span>
@@ -56,19 +55,9 @@ export default function SchemasPage() {
             </Link>
           </Button>
         </div>
-      </Card>
-      <Card className="mt-6 py-3">
-        <Paginator
-          prevHref={prevHref}
-          nextHref={nextHref}
-          page={page}
-          firstHref={firstHref}
-          lastHref={lastHref}
-          recordCount={recordCount}
-          pageSize={pageSize}
-        />
-
-        <div className="mt-3">
+      </div>
+      <div className="mt-6 py-3">
+        <div className="mt-3 table-background">
           <Schemas
             schemas={schemas}
             walletAddress={walletClient?.account.address ?? ''}
@@ -84,7 +73,7 @@ export default function SchemasPage() {
           recordCount={recordCount}
           pageSize={pageSize}
         />
-      </Card>
+      </div>
     </div>
   );
 };

@@ -33,7 +33,7 @@ export default function AttestationsPage() {
 
   return (
     <div>
-      <Card className="p-6 flex flex-col sm:flex-row items-center justify-between">
+      <div className="p-6 flex flex-col sm:flex-row items-center justify-between">
         <div className="flex flex-col text-center">
           <span className="text-2xl font-bold">{recordCount}</span>
           <span className="sm:ml-2 text-1xl">Attestations found</span>
@@ -45,19 +45,9 @@ export default function AttestationsPage() {
             placeholder="UID, schema UID, attester or recipient"
           />
         </div>
-      </Card>
+      </div>
 
-      <Card className="mt-6 py-3">
-        <Paginator
-          prevHref={prevHref}
-          nextHref={nextHref}
-          page={page}
-          firstHref={firstHref}
-          lastHref={lastHref}
-          recordCount={recordCount}
-          pageSize={pageSize}
-        />
-
+      <div className="mt-6 py-3">
         <div className="mt-3">
           <Attestations attestations={attestations} />
         </div>
@@ -71,7 +61,7 @@ export default function AttestationsPage() {
           recordCount={recordCount}
           pageSize={pageSize}
         />
-      </Card>
+      </div>
     </div>
   );
 };
