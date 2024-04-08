@@ -35,7 +35,7 @@ const NavbarItem: FC<NavbarItemProps> = ({ link, label, selected }) => {
 
 const Layout: NextPage<LayoutProps> = ({ children }) => {
   useIndexer();
-  const { pathname: current } = useRouter();
+  const { pathname: current, basePath } = useRouter();
   const paths = [
     { pathname: '/attestations', label: 'Attestations' },
     { pathname: '/schemas', label: 'Schemas' },
@@ -45,7 +45,7 @@ const Layout: NextPage<LayoutProps> = ({ children }) => {
     <nav className="px-5 pt-5">
       <div className="p-5 flex flex-col-reverse sm:flex-row items-center justify-between">
         <div>
-          <Image src="/images/aas-logo.png" alt="Logo" width={70} height={70} />
+          <Image src={`${basePath}/images/aas-logo.png`} alt="Logo" width={70} height={70} />
         </div>
         <div className="flex flex-row items-center justify-between menu">
           {paths.map(({ pathname, label }) => (
