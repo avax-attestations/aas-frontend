@@ -48,7 +48,7 @@ export default function SchemasPage() {
             searchParams={searchParams}
             placeholder="UID, schema or resolver"
           />
-          <Button asChild>
+          <Button asChild variant="aas">
             <Link href="/schema-create">
               <PlusCircle className="w-4 h-4 mr-2" />
               Create Schema

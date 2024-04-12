@@ -27,6 +27,11 @@ const config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        "aas-button": "hsl(var(--aas-button))",
+        "aas-card": "var(--aas-card)",
+        "aas-row": "var(--aas-row)",
+        "aas-background": "var(--aas-background)",
+        "aas-foreground": "var(--aas-foreground)",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

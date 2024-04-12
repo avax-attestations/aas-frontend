@@ -33,6 +33,12 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+
+    --aas-button: 349 94% 65%;
+    --aas-card: #e6e6e6;
+    --aas-row: #f2f2f2;
+    --aas-background: #eaeaea;
+    --aas-foreground: #333333;
   }
  
   .dark {
@@ -68,26 +74,21 @@
  
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-['Barlow'] ;
   }
   body {
-    /* @apply bg-background text-foreground; */
-
-    @apply bg-[#eaeaea];
-
-    /* --background: 0,0%,92%, 1; */
+    @apply bg-aas-background text-foreground;
   }
   .link-red a {
     @apply text-red-700 hover:text-red-600 hover:underline;
   }
   .menu-selected {
-    @apply rounded-full bg-[#333333] text-[#eaeaea] m-2 p-3;
+    @apply rounded-full bg-aas-foreground text-aas-background m-2 p-3;
   }
   .long-text-cell {
     @apply overflow-hidden text-ellipsis max-w-24;
   }
   .menu {
-    @apply font-['Barlow'] font-semibold tracking-wider;
+    @apply font-semibold tracking-wider;
   }
 }
-

@@ -378,26 +378,30 @@ export function AttestationForm({
       <h1 className="text-3xl font-bold">{title}</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit.bind(null, parsedSchema))} className="w-full space-y-6">
-          <FormField
-            control={form.control}
-            name="recipient"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Recipient</FormLabel>
-                <FormControl>
-                  <Input
-                    readOnly={readOnly}
-                    placeholder="Ex. vitalik.eth or 0x0000000000000000000000000000000000000000" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Optional address or ENS name of the recipient.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
+          <div className="bg-aas-card p-4 mt-5">
+            <FormField
+              control={form.control}
+              name="recipient"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recipient</FormLabel>
+                  <FormControl>
+                    <Input
+                      readOnly={readOnly}
+                      placeholder="Ex. vitalik.eth or 0x0000000000000000000000000000000000000000" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Optional address or ENS name of the recipient.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )} />
+          </div>
+          <div className="bg-aas-card p-4 mt-5">
           {parsedSchema.fields.length > 0 && (
             <FormFieldsFromSchema ro={readOnly} schema={parsedSchema} form={form} />
           )}
+          </div>
           <Collapsible
             open={advancedOptionsOpen}
             onOpenChange={setAdvancedOptionsOpen}
@@ -415,6 +419,8 @@ export function AttestationForm({
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2">
+
+            <div className="bg-aas-card p-4 mt-5">
               <FormField
                 control={form.control}
                 name="referencedAttestation"
@@ -432,6 +438,8 @@ export function AttestationForm({
                     <FormMessage />
                   </FormItem>
                 )} />
+                </div>
+            <div className="bg-aas-card p-4 mt-5">
               <FormField
                 control={form.control}
                 name="revocable"
@@ -452,13 +460,14 @@ export function AttestationForm({
                     </FormControl>
                   </FormItem>
                 )} />
+                </div>
             </CollapsibleContent>
           </Collapsible>
-          <div className="grid grid-cols-1">
+          <div className="flex flex-col items-center pt-10">
             {readOnly ?
               (!attestation.revoked ?
-                <Button type="submit" variant="destructive" className="col-span-1">Revoke attestation</Button> : <></>) :
-              <Button type="submit" className="col-span-1">Make attestation</Button>}
+                <Button type="submit" variant="destructive">Revoke attestation</Button> : <></>) :
+              <Button type="submit" variant="aas">Make attestation</Button>}
           </div>
         </form>
       </Form>

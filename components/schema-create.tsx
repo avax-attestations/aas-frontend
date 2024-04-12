@@ -69,74 +69,77 @@ export function SchemaCreate({ onSubmit }: SchemaCreateProps) {
 
   return (
     <>
-      <h1 className="text-3xl font-bold">Create a Schema</h1>
+      <h1 className="text-4xl font-semibold tracking-wide">Create a Schema</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
-          <FormField
-            control={form.control}
-            name="fields"
-            render={({ field: fields }) => (
-              <FormItem>
-                <div className="mb-4">
-                  <FormLabel className="text-base">Fields</FormLabel>
-                  <FormDescription>
-                    Specify one or more fields for the schema.
-                  </FormDescription>
-                </div>
-                {fields.value.map((_, i) => {
-                  const field_id = `fields.${i}`
-                  return (
-                    <FormItem key={field_id}>
-                      <div className="grid grid-cols-10 items-center gap-4">
-                        <FormField
-                          name={`${field_id}.name`}
-                          render={({ field }) => (
-                            <Input
-                              placeholder="Field name"
-                              className="col-span-4"
-                              {...field}
-                            />
-                          )} />
-                        <FormField
-                          name={`${field_id}.type`}
-                          render={({ field }) => (
-                            <Combobox
-                              className="col-span-4"
-                              placeholder="Search type"
-                              label="Select type"
-                              value={field.value}
-                              onChange={(v) => field.onChange({ target: { value: v } })}
-                              items={comboBoxItems}
-                            />
-                          )} />
-                        <FormField
-                          name={`${field_id}.array`}
-                          render={({ field }) => (
-                            <div className="col-span-1 flex items-center space-x-2">
-                              <Checkbox id={`array_${i}`}
-                                checked={field.value}
-                                onCheckedChange={checked => field.onChange(checked)} />
-                              <label
-                                htmlFor={`array_${i}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Array
-                              </label>
-                            </div>
-                          )} />
-                        {fields.value.length > 1 ?
-                          <Button onClick={() => deleteField(i)} variant="secondary" className="col-span-1">
-                            <Trash />
-                          </Button> : <></>}
-                      </div>
-                    </FormItem>)
-                })}
-                <Button variant="secondary" onClick={addField} type="button">
-                  Add Field
-                </Button>
-              </FormItem>
-            )}
-          />
+          <div className="bg-aas-card p-4 mt-5">
+            <FormField
+              control={form.control}
+              name="fields"
+              render={({ field: fields }) => (
+                <FormItem>
+                  <div className="mb-4">
+                    <FormLabel className="text-base">Fields</FormLabel>
+                    <FormDescription>
+                      Specify one or more fields for the schema.
+                    </FormDescription>
+                  </div>
+                  {fields.value.map((_, i) => {
+                    const field_id = `fields.${i}`
+                    return (
+                      <FormItem key={field_id}>
+                        <div className="grid grid-cols-10 items-center gap-4">
+                          <FormField
+                            name={`${field_id}.name`}
+                            render={({ field }) => (
+                              <Input
+                                placeholder="Field name"
+                                className="col-span-4"
+                                {...field}
+                              />
+                            )} />
+                          <FormField
+                            name={`${field_id}.type`}
+                            render={({ field }) => (
+                              <Combobox
+                                className="col-span-4"
+                                placeholder="Search type"
+                                label="Select type"
+                                value={field.value}
+                                onChange={(v) => field.onChange({ target: { value: v } })}
+                                items={comboBoxItems}
+                              />
+                            )} />
+                          <FormField
+                            name={`${field_id}.array`}
+                            render={({ field }) => (
+                              <div className="col-span-1 flex items-center space-x-2">
+                                <Checkbox id={`array_${i}`}
+                                  checked={field.value}
+                                  onCheckedChange={checked => field.onChange(checked)} />
+                                <label
+                                  htmlFor={`array_${i}`}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                  Array
+                                </label>
+                              </div>
+                            )} />
+                          {fields.value.length > 1 ?
+                            <Button onClick={() => deleteField(i)} variant="aas" className="col-span-1">
+                              <Trash />
+                            </Button> : <></>}
+                        </div>
+                      </FormItem>)
+                  })}
+                  <Button variant="secondary" onClick={addField} type="button">
+                    Add Field
+                  </Button>
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="bg-aas-card p-4 mt-5">
           <FormField
             control={form.control}
             name="revocable"
@@ -157,6 +160,8 @@ export function SchemaCreate({ onSubmit }: SchemaCreateProps) {
               </FormItem>
             )}
           />
+          </div>
+          <div className="bg-aas-card p-4 mt-5">
           <FormField
             control={form.control}
             name="resolver"
@@ -174,8 +179,9 @@ export function SchemaCreate({ onSubmit }: SchemaCreateProps) {
               </FormItem>
             )}
           />
-          <div className="grid grid-cols-1">
-            <Button type="submit" className="col-span-1">Create Schema</Button>
+          </div>
+          <div className="flex flex-col items-center pt-5">
+            <Button type="submit" variant="aas">Create Schema</Button>
           </div>
         </form>
       </Form>
