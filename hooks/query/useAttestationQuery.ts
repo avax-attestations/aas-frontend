@@ -15,8 +15,9 @@ export interface AttestationQueryRow {
 }
 
 export interface UseAttestationQueryOpts {
-  searchParams: ReadonlyURLSearchParams
+  searchParams?: ReadonlyURLSearchParams
   pageSize: number
+  schemaUid?: string
 }
 
 export interface UseAttestationReturn {
@@ -26,12 +27,13 @@ export interface UseAttestationReturn {
 
 export function useAttestationQuery({
   searchParams,
-  pageSize
+  pageSize,
+  schemaUid
 }: UseAttestationQueryOpts): UseAttestationReturn {
   const db = useDb();
 
-  const page = getPage(searchParams)
-  const searchStr = (searchParams.get('search') ?? '').trim().toLowerCase()
+  const page = searchParams ? getPage(searchParams) : 1
+  const searchStr = (searchParams?.get('search') ?? '').trim().toLowerCase()
 
   function getQuery() {
     let query = db.attestations
@@ -45,6 +47,8 @@ export function useAttestationQuery({
           a.attester.toLowerCase().includes(searchStr) ||
           a.recipient.toLowerCase().includes(searchStr) ||
           a.schemaId.toLowerCase().includes(searchStr))
+    } else if (schemaUid) {
+      query = query.filter(a => a.schemaId === schemaUid)
     }
 
     return query

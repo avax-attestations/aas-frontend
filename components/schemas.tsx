@@ -52,7 +52,9 @@ export function Schemas({
                 #{s.id}
               </TableCell>
               <TableCell className="long-text-cell">
-                {s.uid}
+                <Link href={`/schema/${s.uid}`}>
+                  <span className="text-red-500">{s.uid}</span>
+                </Link>
               </TableCell>
               <TableCell className="w-56">
                 {canEditName ? (

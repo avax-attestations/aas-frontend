@@ -4,7 +4,6 @@ import { useAttestationQuery } from "@/hooks/query/useAttestationQuery";
 import { SearchForm } from "@/components/search-form";
 import { Paginator } from "@/components/paginator";
 import { getPage, usePaginator } from "@/hooks/usePaginator";
-import { Card } from "@/components/card";
 
 export default function AttestationsPage() {
   const searchParams = useSearchParams();

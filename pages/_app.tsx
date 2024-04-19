@@ -61,7 +61,7 @@ const Layout: NextPage<LayoutProps> = ({ children }) => {
         </div>
       </div>
     </nav>
-    <main className="px-5 mx-auto max-w-6xl">
+    <main className="px-5 mx-auto max-w-7xl">
       <div className="mt-6">
         {children}
       </div>

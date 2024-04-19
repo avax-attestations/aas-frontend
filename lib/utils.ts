@@ -49,6 +49,12 @@ export function timeAgo(timestampInSeconds: number): string {
   }
 }
 
+export function formatDateTime(timestampInSeconds: number): string {
+  const date = new Date(timestampInSeconds * 1000);
+  return date.toLocaleString();
+}
+
+
 export function normalizeChainName(chain: string): string {
   return chain.toLowerCase().replace(' ', '-').replace(/\/$/, '');
 }
