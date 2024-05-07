@@ -1,7 +1,8 @@
 import { EAS } from "@ethereum-attestation-service/eas-sdk";
 import { useSigner } from "@/hooks/useSigner";
-import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
@@ -9,12 +10,13 @@ import { AttestationView } from "@/components/attestation-view";
 
 export default function AttestationPage() {
   const db = useDb();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const signer = useSigner();
   const { toast } = useToast();
   const { easAddress } = useAddresses();
 
-  const uid = router.query['uid'];
+  const uid = searchParams.get('uid');
   const attestation = useLiveQuery(
     () => db.attestations.where('uid').equals(uid ?? '').first(),
     [db, uid]);
@@ -28,7 +30,6 @@ export default function AttestationPage() {
   return schema && attestation ? (
     <AttestationView
       schema={schema.schema}
-      routerQuery={router.query}
       attestation={attestation}
       onRevoke={async () => {
         if (!signer || !schema) {

@@ -2,6 +2,7 @@ import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { useSigner } from "@/hooks/useSigner";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
@@ -11,11 +12,12 @@ import { ZERO_ADDR } from "@/lib/config"
 export default function AttestWithSchemaPage() {
   const db = useDb();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const signer = useSigner();
   const { toast } = useToast();
   const { easAddress } = useAddresses();
 
-  const schemaUid = router.query['schema-uid'];
+  const schemaUid = searchParams.get('schema-uid');
   const schema = useLiveQuery(
     () => db.schemas.where('uid').equals(schemaUid ?? '').first(),
     [db, schemaUid]);

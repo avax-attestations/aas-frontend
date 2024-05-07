@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { Attestation } from "@/lib/db";
 import { parseSchema } from "@/lib/parse-schema";
-import { ParsedUrlQuery } from "querystring";
 import { SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { formatDateTime } from "@/lib/utils";
 import { PropView } from "./prop-view";
@@ -11,7 +10,6 @@ import { ZERO_ADDR, ZERO_UID } from "@/lib/config"
 
 export interface AttestationViewProps {
   schema: string
-  routerQuery: ParsedUrlQuery
   onRevoke: () => Promise<void>
   attestation: Attestation
 }
@@ -66,7 +64,7 @@ export function AttestationView({
         />
         <div className="bg-[#f2f2f2] rounded p-4 mt-4 mb-3 col-span-2 text-ellipsis">
           <span>SCHEMA:</span>
-          <Link href={`/schema/${attestation.schemaId}`}>
+          <Link href={`/schema?uid=${attestation.schemaId}`}>
             <span className="ml-4 text-red-500">{attestation.schemaId}</span>
           </Link>
         </div>

@@ -52,7 +52,7 @@ export function Schemas({
                 #{s.id}
               </TableCell>
               <TableCell className="long-text-cell">
-                <Link href={`/schema/${s.uid}`}>
+                <Link href={`/schema?uid=${s.uid}`}>
                   <span className="text-red-500">{s.uid}</span>
                 </Link>
               </TableCell>
@@ -62,7 +62,7 @@ export function Schemas({
                     asChild
                     variant="link"
                     title="Name this schema">
-                    <Link href={`/attest/${NAME_A_SCHEMA_UID}?def-schemaId=${s.uid}`}>
+                    <Link href={`/attest?schema-uid=${NAME_A_SCHEMA_UID}&def-schemaId=${s.uid}`}>
                       <SquarePen />
                     </Link>
                   </Button>
@@ -82,7 +82,7 @@ export function Schemas({
                   asChild
                   variant="outline"
                   title="Attest with schema">
-                  <Link href={`/attest/${s.uid}`}>
+                  <Link href={`/attest?schema-uid=${s.uid}`}>
                     <PlusCircle className="" />
                   </Link>
                 </Button>

@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
 import { SchemaView } from "@/components/schema-view";
@@ -6,9 +6,9 @@ import { useAttestationQuery } from "@/hooks/query/useAttestationQuery";
 
 export default function SchemaPage() {
   const db = useDb();
-  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const uid = router.query['uid'];
+  const uid = searchParams.get('uid');
   const schema = useLiveQuery(
     () => db.schemas.where('uid').equals(uid ?? '').first(),
     [db, uid]);
