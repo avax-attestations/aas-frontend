@@ -89,16 +89,20 @@ export function AttestationView({
           colSpan={1}
           marginTop={4} />
 
-        <div className="bg-[#f2f2f2] rounded p-4 mt-4 col-span-1">
-          <div>Referenced Attestation:</div>
-          <div className="truncate">
-            {attestation.refUID && attestation.refUID !== ZERO_UID ?
-              <Link href={`/attestation/${attestation.refUID}`}>
-                <span className="text-red-500">{attestation.refUID}</span>
-              </Link> :
-              <span className="font-semibold">N/A</span>
-            }
-          </div>
+        <PropView
+          label="Attester"
+          value={attestation.attester && attestation.attester !== ZERO_ADDR ? attestation.attester : 'N/A'}
+          colSpan={1}
+          marginTop={4} />
+
+        <div className="bg-[#f2f2f2] rounded p-4 mt-4 col-span-2 truncate">
+          <span>Referenced Attestation:</span>
+          {attestation.refUID && attestation.refUID !== ZERO_UID ?
+            <Link href={`/attestation/${attestation.refUID}`}>
+              <span className="ml-4 text-red-500">{attestation.refUID}</span>
+            </Link> :
+            <span className="ml-4 font-semibold">N/A</span>
+          }
         </div>
 
         <div className="bg-[#f2f2f2] rounded p-4 col-span-2 mt-4">
@@ -114,7 +118,7 @@ export function AttestationView({
       <div className="flex flex-col items-center pt-10">
         {!attestation.revoked ?
           <Button type="button" variant="destructive"
-           onClick={onRevoke}>Revoke attestation</Button> : <></>}
+            onClick={onRevoke}>Revoke attestation</Button> : <></>}
       </div>
     </>
   );
