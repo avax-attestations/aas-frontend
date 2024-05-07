@@ -104,7 +104,7 @@ export function AttestationView({
         <div className="bg-[#f2f2f2] rounded p-4 col-span-2 mt-4">
           <div>Raw data:</div>
           <pre className="mt-4 bg-[#e5e5e5]">
-            <code className="text-wrap">
+            <code className="whitespace-pre-wrap">
               {attestation.decodedDataJson}
             </code>
           </pre>
