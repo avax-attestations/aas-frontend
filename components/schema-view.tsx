@@ -3,28 +3,13 @@ import { SchemaFieldsCard } from "./schema-fields-card";
 import { Attestations } from "./attestations";
 import { AttestationQueryRow } from "@/hooks/query/useAttestationQuery";
 import { formatDateTime } from "@/lib/utils";
-import { Paginator } from "./paginator";
-import { useState } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { PropView } from "./prop-view";
 
 export interface SchemaViewProps {
   schema: Schema
   latestAttestations: AttestationQueryRow[]
-}
-
-function SchemaPropView({ label, value, normal }: { label: string, value: string, normal?: boolean }) {
-  return (
-    <div className="bg-[#f2f2f2] rounded p-4 mt-2">
-      <div>
-        {label}:
-      </div>
-      <div className={normal ? "" : "font-semibold"}>
-        {value}
-      </div>
-    </div>
-  );
 }
 
 export function SchemaView({ schema, latestAttestations }: SchemaViewProps) {
@@ -55,25 +40,25 @@ export function SchemaView({ schema, latestAttestations }: SchemaViewProps) {
 
       <div className="bg-aas-card grid grid-cols-2 mt-5 px-3 pb-3 pt-1">
         <div className="flex flex-col">
-          <SchemaPropView
+          <PropView
             label="Created"
             value={formatDateTime(schema.time)} />
-          <SchemaPropView
+          <PropView
             label="Creator"
             value={schema.creator} />
-          <SchemaPropView
+          <PropView
             label="Transaction ID"
             value={schema.txid} />
-          <SchemaPropView
+          <PropView
             label="Resolver Contract"
             value={schema.resolver} />
-          <SchemaPropView
+          <PropView
             label="Revokable Attestation"
             value={schema.revocable ? "Yes" : "No"} />
         </div>
         <div className="flex flex-col ml-2">
           {schema.name ?
-            <SchemaPropView
+            <PropView
               label="Schema Name"
               value={schema.name} />
             : null}

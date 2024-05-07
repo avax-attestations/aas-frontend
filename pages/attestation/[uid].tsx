@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
-import { AttestationForm } from "@/components/attestation-form";
+import { AttestationView } from "@/components/attestation-view";
 
 export default function AttestationPage() {
   const db = useDb();
@@ -26,19 +26,12 @@ export default function AttestationPage() {
     [db, schemaUid]);
 
   return schema && attestation ? (
-    <AttestationForm
+    <AttestationView
       schema={schema.schema}
       routerQuery={router.query}
-      attestation={{
-        recipient: attestation.recipient,
-        revocable: attestation.revocable,
-        referencedAttestation: attestation.refUID,
-        data: attestation.data,
-        revoked: attestation.revoked,
-        uid: attestation.uid,
-      }}
-      onSubmit={async (parsedSchema) => {
-        if (!signer || !schema || !parsedSchema) {
+      attestation={attestation}
+      onRevoke={async () => {
+        if (!signer || !schema) {
           toast({
             variant: 'destructive',
             description: 'Wallet not connected',

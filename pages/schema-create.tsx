@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/router";
 import { useAddresses } from "@/hooks/useAddresses";
 import { SchemaCreate } from "@/components/schema-create";
+import { ZERO_ADDR } from "@/lib/config"
 
 export default function CreateSchemaPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function CreateSchemaPage() {
 
         const schema = data.fields.map(
           f => (`${f.type}${f.array ? '[]' : ''} ${f.name}`)).join(',')
-        const resolverAddress = data.resolver.trim() || '0x0000000000000000000000000000000000000000'
+        const resolverAddress = data.resolver.trim() || ZERO_ADDR;
         const { revocable } = data;
 
         const t = toast({

@@ -18,39 +18,13 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ControllerProps, useForm, UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { FIELD_REGEX, type FieldType } from "@/lib/field-types";
+import { parseSchema, type ParsedSchemaField, type ParsedSchema } from "@/lib/parse-schema";
 import { Minus, Plus, PlusCircle, Trash } from "lucide-react";
 import { ParsedUrlQuery } from "querystring";
 import { useState } from "react";
 import { SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { truncateEllipsis } from "@/lib/utils";
-
-type ParsedSchemaField = {
-  type: FieldType
-  name: string
-  isArray: boolean
-}
-
-type ParsedSchema = {
-  fields: ParsedSchemaField[]
-}
-
-function parseSchema(schema: string): ParsedSchema | null {
-  const fields: ParsedSchemaField[] = [];
-  for (const field of schema.split(',')) {
-    const match = FIELD_REGEX.exec(field);
-    if (!match) {
-      return null;
-    }
-    const [, type, isArray, name] = match;
-    fields.push({
-      type: type as FieldType,
-      name,
-      isArray: isArray === '[]'
-    });
-  }
-  return { fields };
-}
+import { ZERO_UID, ZERO_ADDR } from "@/lib/config";
 
 type FormFieldRenderer = ControllerProps<any, any>['render'];
 
@@ -388,7 +362,7 @@ export function AttestationForm({
                   <FormControl>
                     <Input
                       readOnly={readOnly}
-                      placeholder="Ex. vitalik.eth or 0x0000000000000000000000000000000000000000" {...field} />
+                      placeholder={`Ex. vitalik.eth or ${ZERO_ADDR}`} {...field} />
                   </FormControl>
                   <FormDescription>
                     Optional address or ENS name of the recipient.
@@ -430,7 +404,7 @@ export function AttestationForm({
                     <FormControl>
                       <Input
                         readOnly={readOnly}
-                        placeholder="ex: 0x0000000000000000000000000000000000000000000000000000000000000000" {...field} />
+                        placeholder={`ex: ${ZERO_UID}`} {...field} />
                     </FormControl>
                     <FormDescription>
                       UID of an attestation you want to reference.

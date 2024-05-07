@@ -6,6 +6,7 @@ import { useAddresses } from "@/hooks/useAddresses";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDb } from "@/hooks/useDb";
 import { AttestationForm } from "@/components/attestation-form";
+import { ZERO_ADDR } from "@/lib/config"
 
 export default function AttestWithSchemaPage() {
   const db = useDb();
@@ -58,7 +59,7 @@ export default function AttestWithSchemaPage() {
           const tx = await eas.attest({
             schema: schema.uid,
             data: {
-              recipient: data.recipient || '0x0000000000000000000000000000000000000000',
+              recipient: data.recipient || ZERO_ADDR,
               revocable: data.revocable,
               expirationTime: data.expirationTime,
               data: encodedData,

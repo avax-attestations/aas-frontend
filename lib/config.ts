@@ -27,6 +27,10 @@ export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PR
 
 type Hash = `0x${string}`
 
+
+export const ZERO_UID = '0x0000000000000000000000000000000000000000000000000000000000000000';
+export const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
+
 export const DEPLOYMENT = {
   [avalanche.name]: {
     chain: avalanche,
