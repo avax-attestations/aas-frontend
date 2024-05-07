@@ -40,15 +40,15 @@ export function useAttestationQuery({
       .orderBy('id')
       .reverse()
 
-    if (searchStr) {
+    if (schemaUid) {
+      query = query.filter(a => a.schemaId === schemaUid)
+    } else if (searchStr) {
       query = query
         .filter(a =>
           a.uid.toLowerCase().includes(searchStr) ||
           a.attester.toLowerCase().includes(searchStr) ||
           a.recipient.toLowerCase().includes(searchStr) ||
           a.schemaId.toLowerCase().includes(searchStr))
-    } else if (schemaUid) {
-      query = query.filter(a => a.schemaId === schemaUid)
     }
 
     return query
@@ -56,14 +56,14 @@ export function useAttestationQuery({
 
   const recordCount = useLiveQuery(
     () => getQuery().count()
-    , [db, searchStr]) ?? 0
+    , [db, searchStr, schemaUid]) ?? 0
 
   const attestations = (useLiveQuery(
     () => getQuery()
       .offset((page - 1) * pageSize)
       .limit(pageSize)
       .toArray()
-    , [db, page, searchStr]) ?? [])
+    , [db, page, searchStr, schemaUid]) ?? [])
 
   const schemas = useLiveQuery(
     () => db.schemas
