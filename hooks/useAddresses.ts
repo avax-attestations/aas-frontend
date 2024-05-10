@@ -2,7 +2,7 @@ import { DEPLOYMENT } from "@/lib/config";
 import { useChain } from "./useChain";
 
 export function useAddresses() {
-  const chain = useChain();
+  const { chain } = useChain();
 
   return {
     schemaRegistryAddress: DEPLOYMENT[chain].schemaRegistry.address,

@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
 import { type Chain, isChain } from "@/lib/config";
-import { usePublicClient } from "wagmi";
+import { usePublicClient, type UsePublicClientReturnType } from "wagmi";
 
 export function useChain() {
-  const client = usePublicClient();
-  // avalanche fuji is the default chain
-  const [chain, setChain] = useState<Chain>("Avalanche Fuji");
+  const publicClient = usePublicClient();
+  // avalanche is the default chain
+  const [chain, setChain] = useState<Chain>(publicClient ? publicClient.chain.name as Chain : "Avalanche");
+  const [client, setClient] = useState<UsePublicClientReturnType>();
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !client) {
+    if (typeof window === 'undefined' || !publicClient) {
       return;
     }
 
-    const chainName = client.chain.name as Chain;
+    // Workaround to get a non-undefined public client when the wallet is not connected
+    setClient(publicClient);
+    const chainName = publicClient.chain.name as Chain;
 
     if (!isChain(chainName)) {
       console.warn(`Invalid chain name "${chainName}"`)
@@ -20,7 +23,7 @@ export function useChain() {
     }
 
     setChain(chainName);
-  }, [client])
+  }, [publicClient])
 
-  return chain;
+  return { chain, client };
 }

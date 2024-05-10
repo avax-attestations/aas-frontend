@@ -2,7 +2,7 @@
 import { JsonRpcProvider, FallbackProvider } from "ethers";
 import { type PublicClient } from "viem";
 import { useState, useEffect } from "react";
-import { usePublicClient } from "wagmi";
+import { useChain } from "./useChain";
 
 
 export function publicClientToProvider(publicClient: PublicClient) {
@@ -31,14 +31,14 @@ export function publicClientToProvider(publicClient: PublicClient) {
 type Provider = ReturnType<typeof publicClientToProvider>
 
 export function useProvider() {
-  const publicClient = usePublicClient();
+  const { client } = useChain();
   const [provider, setProvider] = useState<Provider | undefined>(undefined);
 
   useEffect(() => {
-    if (publicClient) {
-      setProvider(publicClientToProvider(publicClient));
+    if (client) {
+      setProvider(publicClientToProvider(client));
     }
-  }, [publicClient]);
+  }, [client]);
 
   return provider;
 }

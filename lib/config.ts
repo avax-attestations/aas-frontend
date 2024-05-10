@@ -8,16 +8,18 @@ import avalancheEAS from '@ethereum-attestation-service/eas-contracts/deployment
 import fujiSchemaRegistry from '@ethereum-attestation-service/eas-contracts/deployments/fuji/SchemaRegistry.json'
 import fujiEAS from '@ethereum-attestation-service/eas-contracts/deployments/fuji/EAS.json'
 
+// The first chain listed here is the default chain
+// (used when the wallet is not connected)
 const supportedChains = [
   avalanche,
-  avalancheFuji
+  avalancheFuji,
 ] as ViemChain[]
 
 const prodChains = supportedChains as [ViemChain, ...ViemChain[]]
 
-const devChains = ([
+const devChains = supportedChains.concat([
   hardhat,
-] as ViemChain[]).concat(supportedChains) as [ViemChain, ...ViemChain[]]
+] as ViemChain[]) as [ViemChain, ...ViemChain[]]
 
 export const NAME_SCHEMA_UID = '0x44d562ac1d7cd77e232978687fea027ace48f719cf1d58c7888e509663bb87fc'
 

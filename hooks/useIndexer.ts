@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { usePublicClient } from "wagmi";
 import { index, resume } from "@/lib/indexer/persist";
 import { useChain } from "./useChain";
 import { useDb } from "./useDb";
@@ -11,8 +10,7 @@ const POLL_INTERVAL = 60000;
 
 export function useIndexer() {
   const router = useRouter();
-  const client = usePublicClient();
-  const chain = useChain();
+  const { chain, client } = useChain();
   const db = useDb();
   const provider = useProvider();
 
