@@ -49,6 +49,7 @@ export default function AttestWithSchemaPage() {
             value: data.fields[field.name],
           });
         }
+        debugger
 
         const encodedData = schemaEncoder.encodeData(toEncode);
 
