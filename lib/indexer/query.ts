@@ -1,4 +1,4 @@
-import type { TableName, Schema, EntityFromTableName } from '@/lib/db'
+import type { TableName, Schema, EntityFromTableName, Attestation } from '@/lib/db'
 import { PublicClient, decodeEventLog, getContract, zeroHash } from 'viem';
 import { DEPLOYMENT, type Chain } from '@/lib/config';
 import { Abi, AbiEvent } from 'abitype';
@@ -105,14 +105,13 @@ export async function computeMutations(
   chain: Chain,
   client: PublicClient,
   nextBlock: number,
-  db: Database
+  db: DatabaseWrapper
 ): Promise<[true, number, Mutations] | [false]> {
   const schemaRegistryAbi = DEPLOYMENT[chain].schemaRegistry.abi;
   const schemaRegistryAddress = DEPLOYMENT[chain].schemaRegistry.address;
   const easAbi = DEPLOYMENT[chain].eas.abi;
   const easAddress = DEPLOYMENT[chain].eas.address;
   const blockBatchSize = DEPLOYMENT[chain].blockBatchSize - 1n;
-
 
   const schemaRegisteredEvent = getEventFromAbi(schemaRegistryAbi, "Registered");
   const attestedEvent = getEventFromAbi(easAbi, "Attested");
@@ -230,20 +229,13 @@ type SchemaRecord = {
 async function handleSchemaRegisteredEvent(event: Event, client: PublicClient, schemaCache: Record<string, Schema>): Promise<Mutations> {
   const args = event.decodedEvent.args as any;
 
-  const schemaRecord = await getSchema(client, args.uid)
+  const schema = await fetchSchema(client, args.uid)
 
-  const schema = {
-    uid: schemaRecord.uid,
-    schema: schemaRecord.schema,
-    creator: event.transaction.from,
-    resolver: schemaRecord.resolver,
-    time: timeToNumber(event.block.timestamp),
-    txid: event.transaction.hash,
-    revocable: schemaRecord.revocable,
-    name: '',
-    attestationCount: 0
-  }
+  schema.creator = event.transaction.from
+  schema.time = timeToNumber(event.block.timestamp)
+  schema.txid = event.transaction.hash
   schemaCache[schema.uid] = schema
+
   return [{
     operation: 'put',
     table: 'schemas',
@@ -256,7 +248,7 @@ function timeToNumber(timestamp: bigint) {
   return Number(timestamp)
 }
 
-interface Database {
+export interface DatabaseWrapper {
   getSchema: (uid: string) => Promise<Schema | null>
 }
 
@@ -301,6 +293,25 @@ async function getSchema(client: PublicClient, uid: string): Promise<SchemaRecor
       }
       await sleep(backoffDelay)
     }
+  }
+}
+
+export async function fetchSchema(
+  client: PublicClient,
+  uid: string
+): Promise<Schema> {
+  const schemaRecord = await getSchema(client, uid)
+
+  return {
+    uid: schemaRecord.uid,
+    schema: schemaRecord.schema,
+    creator: '',
+    resolver: schemaRecord.resolver,
+    time: 0,
+    txid: '',
+    revocable: schemaRecord.revocable,
+    name: '',
+    attestationCount: 0
   }
 }
 
@@ -351,23 +362,28 @@ async function getAttestation(client: PublicClient, uid: string): Promise<Attest
   }
 }
 
-async function handleAttestedEvent(event: Event, client: PublicClient, db: Database, schemaCache: Record<string, Schema>): Promise<Mutations> {
-  const args = event.decodedEvent.args as any
-  const attestation = await getAttestation(client, args.uid)
+export async function fetchAttestation(client: PublicClient, uid: string, db: DatabaseWrapper, schemaCache?: Record<string, Schema>): Promise<{
+  attestation: Attestation,
+  schema: Schema,
+  attestationRecord: AttestationRecord
+  decodedData: any
+}> {
+  const attestationRecord = await getAttestation(client, uid)
 
   const schema = await (async () => {
-    if (schemaCache[attestation.schema]) {
+    if (schemaCache && schemaCache[attestationRecord.schema]) {
       // schema registered in the same block batch which is not committed to the db yet
       // get from cache
-      return schemaCache[attestation.schema]
+      return schemaCache[attestationRecord.schema]
     }
-    return db.getSchema(attestation.schema)
+    // check if available in local db
+    const result = await db.getSchema(attestationRecord.schema)
+    if (result) {
+      return result
+    }
+    // fallback to fetching schema from the blockchain
+    return fetchSchema(client, attestationRecord.schema)
   })()
-  if (!schema) {
-    // attestation withou a matching schema, ignore
-    return []
-  }
-  schema.attestationCount++;
 
   let decodedData: any = null
   let decodedDataJson = ''
@@ -376,34 +392,50 @@ async function handleAttestedEvent(event: Event, client: PublicClient, db: Datab
     const encoder = new SchemaEncoder(schema.schema)
     // The decoded data can contain bigint values, so we have to use the "replacer" argument
     // to serialize bigints as strings.
-    decodedData = encoder.decodeData(attestation.data)
+    decodedData = encoder.decodeData(attestationRecord.data)
     decodedDataJson = JSON.stringify(decodedData, (_, value) =>
       typeof value === "bigint" ? value.toString() : value)
   } catch (err) {
-    console.warn(`Error decoding data for attestation ${attestation.uid}`, err)
+    console.warn(`Error decoding data for attestation ${attestationRecord.uid}`, err)
   }
 
   const timeCreated = Math.round(new Date().valueOf() / 1000)
 
+  return {
+    attestation: {
+      uid: attestationRecord.uid,
+      schemaId: attestationRecord.schema,
+      data: attestationRecord.data,
+      attester: attestationRecord.attester,
+      recipient: attestationRecord.recipient,
+      refUID: attestationRecord.refUID,
+      revocationTime: timeToNumber(attestationRecord.revocationTime),
+      expirationTime: timeToNumber(attestationRecord.expirationTime),
+      time: timeToNumber(attestationRecord.time),
+      txid: '',
+      revoked: attestationRecord.revocationTime < BigInt(timeCreated) && attestationRecord.revocationTime !== 0n,
+      timeCreated,
+      revocable: attestationRecord.revocable,
+      decodedDataJson
+    }, schema, attestationRecord, decodedData
+  }
+}
+
+async function handleAttestedEvent(event: Event, client: PublicClient, db: DatabaseWrapper, schemaCache: Record<string, Schema>): Promise<Mutations> {
+  const args = event.decodedEvent.args as any
+  const {
+    attestation,
+    schema,
+    decodedData,
+    attestationRecord
+  } = await fetchAttestation(client, args.uid, db, schemaCache)
+
+  schema.attestationCount++;
+
   const result = [{
     operation: 'put',
     table: 'attestations',
-    data: {
-      uid: attestation.uid,
-      schemaId: attestation.schema,
-      data: attestation.data,
-      attester: attestation.attester,
-      recipient: attestation.recipient,
-      refUID: attestation.refUID,
-      revocationTime: timeToNumber(attestation.revocationTime),
-      expirationTime: timeToNumber(attestation.expirationTime),
-      time: timeToNumber(attestation.time),
-      txid: event.transaction.hash,
-      revoked: attestation.revocationTime < BigInt(timeCreated) && attestation.revocationTime !== 0n,
-      timeCreated,
-      revocable: attestation.revocable,
-      decodedDataJson
-    },
+    data: attestation,
     blockNumber: Number(event.block.number)
   }, {
     operation: 'modify',
@@ -416,7 +448,7 @@ async function handleAttestedEvent(event: Event, client: PublicClient, db: Datab
   }] as Mutations
 
 
-  if (attestation.schema === schemaNameUID) {
+  if (attestationRecord.schema === schemaNameUID) {
     const uid = decodedData[0].value.value
     const name = decodedData[1].value.value
     const schemaBeingNamed = await (async () => {

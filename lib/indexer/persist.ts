@@ -1,9 +1,22 @@
 import { DEPLOYMENT, type Chain } from '@/lib/config';
-import { Mutations, computeMutations } from '@/lib/indexer/query';
+import { DatabaseWrapper, Mutations, computeMutations } from '@/lib/indexer/query';
 import { Database } from '@/lib/db';
 import pako from 'pako'
 import { type PublicClient } from 'viem';
 import { normalizeChainName, sleep } from '@/lib/utils';
+
+
+export function wrapDb(db: Database): DatabaseWrapper {
+  return {
+    getSchema: async (uid) => {
+      const items = await db.schemas.where('uid').equals(uid).toArray()
+      if (items.length !== 1) {
+        return null
+      }
+      return items[0]
+    }
+  }
+}
 
 export async function index(
   chain: Chain,
@@ -15,15 +28,7 @@ export async function index(
 
   while (!signal.shouldStop) {
     const [fetched, nextBlock, mutations] = await computeMutations(
-      chain, client, (await db.properties.get('nextBlock'))?.value ?? 0, {
-      getSchema: async (uid) => {
-        const items = await db.schemas.where('uid').equals(uid).toArray()
-        if (items.length !== 1) {
-          return null
-        }
-        return items[0]
-      }
-    })
+      chain, client, (await db.properties.get('nextBlock'))?.value ?? 0, wrapDb(db))
 
     if (!fetched) {
       break

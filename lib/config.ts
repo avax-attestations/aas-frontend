@@ -19,7 +19,7 @@ const prodChains = supportedChains as [ViemChain, ...ViemChain[]]
 
 const devChains = supportedChains.concat([
   hardhat,
-] as ViemChain[]) as [ViemChain, ...ViemChain[]]
+] as ViemChain[]).reverse() as [ViemChain, ...ViemChain[]]
 
 export const NAME_SCHEMA_UID = '0x44d562ac1d7cd77e232978687fea027ace48f719cf1d58c7888e509663bb87fc'
 

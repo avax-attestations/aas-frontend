@@ -25,5 +25,5 @@ export function useChain() {
     setChain(chainName);
   }, [publicClient])
 
-  return { chain, client };
+  return { chain, setChain, client };
 }
